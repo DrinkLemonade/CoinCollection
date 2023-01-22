@@ -8,6 +8,12 @@ public class Player : MonoBehaviour
     int jumpSpeed = 10;
     bool onGround = false;
     Rigidbody myRigidBody;
+    enum State
+    {
+        IDLE,           // valeur 0
+        ATTACK,     // valeur 1
+        DIE             // valeur 2
+    }
 
 
     // Start is called before the first frame update
