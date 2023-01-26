@@ -5,6 +5,10 @@ using UnityEngine.InputSystem; //new input system
 
 public class PlayerController : MonoBehaviour
 {
+    //Debug
+    [SerializeField]
+    bool debugging = false;
+ 
     //Controls
     public GameControls controls;
 
@@ -30,6 +34,9 @@ public class PlayerController : MonoBehaviour
     bool desiredJumpRelease;
     bool jumpReleaseUsed = false;
     bool onGround;
+
+    //Sphere mode - might use for stuff?
+    bool sphereMode = true;
 
     // Start is called before the first frame update
     void Start()
@@ -60,8 +67,8 @@ public class PlayerController : MonoBehaviour
         //We remember it using the OR operand, equivalent to x = x || y. Now it remains true once enabled, until explicitly made false.
         desiredJump |= controls.Player.Jump.triggered;
         desiredJumpRelease |= controls.Player.Jump.WasReleasedThisFrame();
-        if (desiredJump) Debug.Log("Jump desired!");
-        if (desiredJumpRelease) Debug.Log("Jump release desired!");
+        if (desiredJump && debugging) Debug.Log("Jump desired!");
+        if (desiredJumpRelease && debugging) Debug.Log("Jump release desired!");
     }
     void FixedUpdate()
     //"The FixedUpdate method gets invoked at the start of each physics simulation step. How often that happens depends on the time step, which is 0.02—fifty times per second—by default, but you can change it via the Time project settings or via Time.fixedDeltaTime."
@@ -124,7 +131,7 @@ public class PlayerController : MonoBehaviour
         if (!onGround && !jumpReleaseUsed)
         {
             jumpReleaseUsed = true;
-            Debug.Log("Decreasing jump height...");
+            if (debugging) Debug.Log("Decreasing jump height...");
             velocity.y /= 2;
         }
     }
