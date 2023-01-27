@@ -29,24 +29,29 @@ public class PlayerController : MonoBehaviour
     [SerializeField, Range(0f, 10f)]
     private float jumpHeight = 6; //in Unity units (meters)
 
-    //Jump flags, ground detection
+    //Jump flags
     bool desiredJump; //Set in Update and used in FixedUpdate
     bool desiredJumpRelease;
     bool jumpReleaseUsed = false;
-    bool onGround;
+
+    //Ground and slope detection
+    int groundContactCount;
+    bool OnGround => groundContactCount > 0; //shorthand way to define a single-statement readonly property
+    //It's the same as: bool OnGround { get { return groundContactCount > 0; } }
+    [SerializeField, Range(0f, 90f)]
+    float maxGroundAngle = 25f;
+    float minGroundDotProduct;
+    bool jumpAwayFromSlopes = true;
+    Vector3 contactNormal;
 
     //Sphere mode - might use for stuff?
     bool sphereMode = true;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        //Empty
-    }
     void Awake()
     {
         controls = new GameControls();
         body = GetComponent<Rigidbody>();
+        OnValidate();
     }
 
     // Update is called once per frame
@@ -71,29 +76,28 @@ public class PlayerController : MonoBehaviour
         if (desiredJumpRelease && debugging) Debug.Log("Jump release desired!");
     }
     void FixedUpdate()
-    //"The FixedUpdate method gets invoked at the start of each physics simulation step. How often that happens depends on the time step, which is 0.02—fifty times per second—by default, but you can change it via the Time project settings or via Time.fixedDeltaTime."
-    //"Can we use Time.deltaTime in FixedUpdate? Yes. When FixedUpdate gets invoked Time.deltaTime is equal to Time.fixedDeltaTime."
-    //"Depending on your frame rate FixedUpdate can get invoked zero, one, or multiple times per invocation of Update. Each frame a sequence of FixedUpdate invocations happen, then Update gets invoked, then the frame gets rendered. This can make the discrete nature of the physics simulation obvious when the physics time step is too large relative to the frame time."
-    //"You can solve that by either decreasing the fixed time step or by enabling the Interpolate mode of a Rigidbody. Setting it to Interpolate makes it linearly interpolate between its last and current position, so it will lag a bit behind its actual position according to PhysX. The other option is Extrapolate, which interpolates to its guessed position according to its velocity, which is only really acceptable for objects that have a mostly constant velocity.
-    //Note that increasing the time step means the sphere covers more distance per physics update, which can result in it tunneling through the walls when using discrete collision detection."
     {
+        //"The FixedUpdate method gets invoked at the start of each physics simulation step. How often that happens depends on the time step, which is 0.02—fifty times per second—by default, but you can change it via the Time project settings or via Time.fixedDeltaTime."
+        //"Can we use Time.deltaTime in FixedUpdate? Yes. When FixedUpdate gets invoked Time.deltaTime is equal to Time.fixedDeltaTime."
+        //"Depending on your frame rate FixedUpdate can get invoked zero, one, or multiple times per invocation of Update. Each frame a sequence of FixedUpdate invocations happen, then Update gets invoked, then the frame gets rendered. This can make the discrete nature of the physics simulation obvious when the physics time step is too large relative to the frame time."
+        //"You can solve that by either decreasing the fixed time step or by enabling the Interpolate mode of a Rigidbody. Setting it to Interpolate makes it linearly interpolate between its last and current position, so it will lag a bit behind its actual position according to PhysX. The other option is Extrapolate, which interpolates to its guessed position according to its velocity, which is only really acceptable for objects that have a mostly constant velocity.
+        //Note that increasing the time step means the sphere covers more distance per physics update, which can result in it tunneling through the walls when using discrete collision detection."
+
         //Let's grab the current velocity from the RigidBody, so we know what we want to adjust to match the desired velocity.
         velocity = body.velocity;
 
-        //Then, we change the current velocity until it matches the desired one.
-        //To do this, we multiply max acceleration (in meters per one second) with how much time has passed between physics updates (in seconds), giving us the maximum change (extra meters) we can add to our velocity (meters per second)
-        float acceleration = onGround ? maxAcceleration : maxAirAcceleration;
-        float maxSpeedChange = acceleration * Time.deltaTime;
-
-        //Let's add this to velocity. However, if we add speed to reach a desired velocity, we risk going too fast.
-        //And if we remove speed to reach a desired velocity, we risk slowing down too much.
-        //So let's move velocity towards the desired amount, and if we're moving past that, set it to the desired amount instead.
-        velocity.x = Mathf.MoveTowards(velocity.x, desiredVelocity.x, maxSpeedChange);
-        velocity.z = Mathf.MoveTowards(velocity.z, desiredVelocity.z, maxSpeedChange);
-
-        //This is basically equivalent to doing:
-        //"if velocity.x < desired.x then velocity.x = min between velocity+change OR desired
-        //else if velocity.x > desired.x then velocity.x = max between velocity+change OR desired"
+        if (OnGround)
+        {
+            if (groundContactCount > 1) //"only bothering to normalize the contact normal if it's an aggregate, as it's already unit-length otherwise."
+            {
+                contactNormal.Normalize();
+            }
+        }
+        else
+        {
+            contactNormal = Vector3.up; //if jumping, don't fall back towards slopes!
+        }
+        AdjustVelocity();
 
         //Handle jump
         if (desiredJump)
@@ -112,23 +116,22 @@ public class PlayerController : MonoBehaviour
         //If we didn't use physics, we'd multiply that by how many seconds elapsed between physics updates, and that'd give us meters to move, and we could move the player by hand.
         //Instead, because it's a physics object, we give its RigidBody that velocity and let the physics system handle it.
         body.velocity = velocity;
-
-        onGround = false;
+        ClearState();
     }
 
     void Jump()
     {
-        if (onGround)
+        if (OnGround)
         {
             //EXTREMELY smart maths from CatlikeCoding that determine the velocity needed to jump a certain height.
             //"Note that we most likely fall a bit short of the desired height due to the discrete nature of the physics simulation. The maximum would be reached somewhere in between time steps."
-            velocity.y += Mathf.Sqrt(-2f * Physics.gravity.y * jumpHeight);
+            float jumpSpeed = Mathf.Sqrt(-2f * Physics.gravity.y * jumpHeight);
+            velocity += contactNormal * jumpSpeed;
         }
     }
-
     void JumpRelease()
     {
-        if (!onGround && !jumpReleaseUsed)
+        if (!OnGround && !jumpReleaseUsed)
         {
             jumpReleaseUsed = true;
             if (debugging) Debug.Log("Decreasing jump height...");
@@ -156,9 +159,61 @@ public class PlayerController : MonoBehaviour
             //We're using normal vectors to determine what's the ground. A normal vector points away from the center
             //Planes have only 1 normal vector, pointing straight up. (Spheres have many, pointing away)
             Vector3 normal = collision.GetContact(i).normal;
-            onGround |= normal.y >= 0.9f; //Straight up is 1 for flat, but let's allow slightly sloped ground
-            jumpReleaseUsed = false;
+
+            if (normal.y >= minGroundDotProduct)
+            {
+                groundContactCount += 1;
+                if (jumpAwayFromSlopes) contactNormal += normal;
+                else contactNormal += Vector3.up;
+                jumpReleaseUsed = false;
+            }
+            
+            //else onGround |= normal.y >= minGroundDotProduct;
+            //When a surface is horizontal the Y component of its normal vector is 1. For a perfectly vertical wall the Y component is zero.
         }
+    }
+    void OnValidate()
+    {
+        minGroundDotProduct = Mathf.Cos(maxGroundAngle * Mathf.Deg2Rad); //Dot product: Basically, the 2 vectors that make up a slope (flat ground + sloped ground) "cast a shadow" on each other, as if creating two right triangles. The length of the bottom sides of one such triangle is the result of the dot product. If both vectors are "unit length" (the same length? I'm not sure), the dot product is also the cosine of their angle (?) (I'm not good at geometry)
+    }
+
+    Vector3 ProjectOnContactPlane(Vector3 vector)
+    {
+        return vector - contactNormal * Vector3.Dot(vector, contactNormal);
+    }
+    void AdjustVelocity()
+    {
+        //Calculate a new velocity relative to the ground, when moving down a slope.
+        //When running down a slope, normally, the player will run off the slope and bounce awkwardly downwards, instead of sticking to the slope. We can use ProjectOnContactPlane to take the movement vector, and project it on the slope's normal.
+        Vector3 xAxis = ProjectOnContactPlane(Vector3.right).normalized;
+        Vector3 zAxis = ProjectOnContactPlane(Vector3.forward).normalized;
+
+        float currentX = Vector3.Dot(velocity, xAxis);
+        float currentZ = Vector3.Dot(velocity, zAxis);
+
+        //Let's add this to velocity. However, if we add speed to reach a desired velocity, we risk going too fast.
+        //And if we remove speed to reach a desired velocity, we risk slowing down too much.
+        //So let's move velocity towards the desired amount, and if we're moving past that, set it to the desired amount instead.
+        float acceleration = OnGround ? maxAcceleration : maxAirAcceleration;
+        float maxSpeedChange = acceleration * Time.deltaTime;
+
+
+        //Let's add this to velocity. However, if we add speed to reach a desired velocity, we risk going too fast.
+        //And if we remove speed to reach a desired velocity, we risk slowing down too much.
+        //So let's move velocity towards the desired amount, and if we're moving past that, set it to the desired amount instead.
+        float newX = Mathf.MoveTowards(currentX, desiredVelocity.x, maxSpeedChange);
+        float newZ = Mathf.MoveTowards(currentZ, desiredVelocity.z, maxSpeedChange);
+        //This is basically equivalent to doing:
+        //"if velocity.x < desired.x then velocity.x = min between velocity+change OR desired
+        //else if velocity.x > desired.x then velocity.x = max between velocity+change OR desired"
+
+        velocity += xAxis * (newX - currentX) + zAxis * (newZ - currentZ);
+    }
+
+    void ClearState()
+    {
+        groundContactCount = 0;
+        contactNormal = Vector3.zero;
     }
 
     protected void OnEnable()

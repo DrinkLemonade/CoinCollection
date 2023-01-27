@@ -72,3 +72,7 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 Assets/RPGHero/SRP/FreeRPGHeroesHD.zip
 Assets/RPGHero/SRP/FreeRPGHeroesLW.zip
+/Assets/Historic environment/*
+/Assets/Old Torch/*
+Assets/Historic environment.meta
+Assets/Old Torch.meta
