@@ -1,10 +1,25 @@
 using System.Collections;
 using System.Collections.Generic;
+//using System.Numerics;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem; //new input system
+using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
 
 public class PlayerController : MonoBehaviour
 {
+    //Layers
+    //Our player's parent object (not children) is on the Agent layer (an active entity, not part of the level geometry)
+    [SerializeField]
+    LayerMask probeMask = -1, stairsMask = -1; //Ground raycasts probe all layers by default, but we'll change that in the editor, so we don't probe "ignore raycasts" and agents
+    //"by using a mask we don't rely on a hard-coded layer name and are more flexible, which also makes experimentation easier."
+
+    //Animation
+    [SerializeField]
+    PlayerAnimatorConfig animationConfig = default;
+    PlayerAnimator animator;
+
     //Debug
     [SerializeField]
     bool debugging = false;
@@ -21,7 +36,6 @@ public class PlayerController : MonoBehaviour
 
     //Speed and velocity
     Vector3 velocity, desiredVelocity;
-
     [SerializeField, Range(0f, 100f)]
     float maxSpeed = 8f;
     [SerializeField, Range(0f, 100f)]
@@ -34,24 +48,28 @@ public class PlayerController : MonoBehaviour
     bool desiredJumpRelease;
     bool jumpReleaseUsed = false;
 
-    //Ground and slope detection
-    int groundContactCount;
-    bool OnGround => groundContactCount > 0; //shorthand way to define a single-statement readonly property
-    //It's the same as: bool OnGround { get { return groundContactCount > 0; } }
+    //Ground detection and slopes
+    int groundContactCount, steepContactCount;
+    bool OnGround => groundContactCount > 0; //shorthand way to define a single-statement readonly property. It's the same as: bool OnGround { get { return groundContactCount > 0; } }
+    bool OnSteep => steepContactCount > 0;
+    int stepsSinceLastGrounded, stepsSinceLastJump;
     [SerializeField, Range(0f, 90f)]
-    float maxGroundAngle = 25f;
-    float minGroundDotProduct;
-    bool jumpAwayFromSlopes = true;
-    Vector3 contactNormal;
-
-    //Sphere mode - might use for stuff?
-    bool sphereMode = true;
+    float maxGroundAngle = 25f, maxStairsAngle = 50f;
+    float minGroundDotProduct, minStairsDotProduct;
+    [SerializeField]
+    bool alwaysJumpStraightUp = true;
+    Vector3 contactNormal, steepNormal; //anything too steep to count as ground, but isn't a wall, ceiling, or anything in between
+    [SerializeField, Range(0f, 100f)]
+    float maxSnapSpeed = 100f; //Max speed at which we'll snap to slopes instead of flying off. "Note that setting both max speeds to the same value can produce inconsistent results due to precision limitations. It's better to make the max snap speed a bit higher or lower than the max speed."
+    [SerializeField, Min(0f)]
+    float probeDistance = 2.5f; //How far down we check for ground to snap down to, instead of flying off. Our little knight's center is 2 units off the floor, so check 0.5 units below its feet. "If too low, snapping can fail at steep angles or high velocities, while too high can lead to nonsensical snapping to ground far below."
 
     void Awake()
     {
         controls = new GameControls();
         body = GetComponent<Rigidbody>();
         OnValidate();
+        //animator.PlayIdle(animationConfig.IdleAnimationSpeed);
     }
 
     // Update is called once per frame
@@ -74,6 +92,11 @@ public class PlayerController : MonoBehaviour
         desiredJumpRelease |= controls.Player.Jump.WasReleasedThisFrame();
         if (desiredJump && debugging) Debug.Log("Jump desired!");
         if (desiredJumpRelease && debugging) Debug.Log("Jump release desired!");
+
+        if (controls.Player.Menu.WasReleasedThisFrame()) //Hacky restart, for now
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
     }
     void FixedUpdate()
     {
@@ -83,20 +106,7 @@ public class PlayerController : MonoBehaviour
         //"You can solve that by either decreasing the fixed time step or by enabling the Interpolate mode of a Rigidbody. Setting it to Interpolate makes it linearly interpolate between its last and current position, so it will lag a bit behind its actual position according to PhysX. The other option is Extrapolate, which interpolates to its guessed position according to its velocity, which is only really acceptable for objects that have a mostly constant velocity.
         //Note that increasing the time step means the sphere covers more distance per physics update, which can result in it tunneling through the walls when using discrete collision detection."
 
-        //Let's grab the current velocity from the RigidBody, so we know what we want to adjust to match the desired velocity.
-        velocity = body.velocity;
-
-        if (OnGround)
-        {
-            if (groundContactCount > 1) //"only bothering to normalize the contact normal if it's an aggregate, as it's already unit-length otherwise."
-            {
-                contactNormal.Normalize();
-            }
-        }
-        else
-        {
-            contactNormal = Vector3.up; //if jumping, don't fall back towards slopes!
-        }
+        UpdateState();
         AdjustVelocity();
 
         //Handle jump
@@ -121,17 +131,32 @@ public class PlayerController : MonoBehaviour
 
     void Jump()
     {
+        Vector3 jumpDirection;
         if (OnGround)
         {
-            //EXTREMELY smart maths from CatlikeCoding that determine the velocity needed to jump a certain height.
-            //"Note that we most likely fall a bit short of the desired height due to the discrete nature of the physics simulation. The maximum would be reached somewhere in between time steps."
-            float jumpSpeed = Mathf.Sqrt(-2f * Physics.gravity.y * jumpHeight);
-            velocity += contactNormal * jumpSpeed;
+            jumpDirection = contactNormal;
+        } //could do else if OnSteep jumpDirection = steepNormal, to allow jumping off steep surfaces
+        else return;//can't jump
+
+        //EXTREMELY smart maths from CatlikeCoding that determine the velocity needed to jump a certain height.
+        //"Note that we most likely fall a bit short of the desired height due to the discrete nature of the physics simulation. The maximum would be reached somewhere in between time steps."
+        float jumpSpeed = Mathf.Sqrt(-2f * Physics.gravity.y * jumpHeight);
+        if (alwaysJumpStraightUp) jumpDirection = Vector3.up;
+        else jumpDirection = (jumpDirection + Vector3.up).normalized; //jump is averaged between straight up, and away from ground's angle
+        //we could also make it Vecor3.up for pure upwards jumping
+
+        float alignedSpeed = Vector3.Dot(velocity, jumpDirection);
+        if (alignedSpeed > 0f)
+        {
+            jumpSpeed = Mathf.Max(jumpSpeed - alignedSpeed, 0f);
         }
+        velocity += jumpDirection * jumpSpeed;
+
+        stepsSinceLastJump = 0;
     }
     void JumpRelease()
     {
-        if (!OnGround && !jumpReleaseUsed)
+        if (!OnGround && !jumpReleaseUsed && velocity.y > 0)
         {
             jumpReleaseUsed = true;
             if (debugging) Debug.Log("Decreasing jump height...");
@@ -153,6 +178,8 @@ public class PlayerController : MonoBehaviour
 
     void EvaluateCollision(Collision collision)
     {
+        float minDot = GetMinDot(collision.gameObject.layer); //check if we're touching ground and not something else
+
         //"The amount of contact points can by found via the contactCount property of Collision. We can use that to loop through all points via the GetContact method, passing it an index. Then we can access the point's normal property."
         for (int i = 0; i < collision.contactCount; i++)
         {
@@ -160,14 +187,18 @@ public class PlayerController : MonoBehaviour
             //Planes have only 1 normal vector, pointing straight up. (Spheres have many, pointing away)
             Vector3 normal = collision.GetContact(i).normal;
 
-            if (normal.y >= minGroundDotProduct)
+            if (normal.y >= minDot)
             {
                 groundContactCount += 1;
-                if (jumpAwayFromSlopes) contactNormal += normal;
-                else contactNormal += Vector3.up;
+                contactNormal += normal;
                 jumpReleaseUsed = false;
             }
-            
+            else if (normal.y > -0.01f) //If we find ourselves wedged inside a narrow space, with multiple steep contacts, then we might be able to move by pushing against those contact points.
+            {
+                steepContactCount += 1;
+                steepNormal += normal;
+            }
+
             //else onGround |= normal.y >= minGroundDotProduct;
             //When a surface is horizontal the Y component of its normal vector is 1. For a perfectly vertical wall the Y component is zero.
         }
@@ -175,11 +206,34 @@ public class PlayerController : MonoBehaviour
     void OnValidate()
     {
         minGroundDotProduct = Mathf.Cos(maxGroundAngle * Mathf.Deg2Rad); //Dot product: Basically, the 2 vectors that make up a slope (flat ground + sloped ground) "cast a shadow" on each other, as if creating two right triangles. The length of the bottom sides of one such triangle is the result of the dot product. If both vectors are "unit length" (the same length? I'm not sure), the dot product is also the cosine of their angle (?) (I'm not good at geometry)
+        minStairsDotProduct = Mathf.Cos(maxStairsAngle * Mathf.Deg2Rad);
     }
 
     Vector3 ProjectOnContactPlane(Vector3 vector)
     {
         return vector - contactNormal * Vector3.Dot(vector, contactNormal);
+    }
+
+    void UpdateState()
+    {
+        stepsSinceLastGrounded += 1;
+        stepsSinceLastJump += 1;
+
+        //Let's grab the current velocity from the RigidBody, so we know what we want to adjust to match the desired velocity.
+        velocity = body.velocity;
+
+        if (OnGround || SnapToGround() || CheckSteepContacts()) //SnapToGround will only get invoked when OnGround is false. Pretty cool.
+        {
+            stepsSinceLastGrounded = 0;
+            if (groundContactCount > 1) //"only bothering to normalize the contact normal if it's an aggregate, as it's already unit-length otherwise."
+            {
+                contactNormal.Normalize();
+            }
+        }
+        else
+        {
+            contactNormal = Vector3.up; //if jumping, don't fall back towards slopes!
+        }
     }
     void AdjustVelocity()
     {
@@ -209,18 +263,84 @@ public class PlayerController : MonoBehaviour
 
         velocity += xAxis * (newX - currentX) + zAxis * (newZ - currentZ);
     }
-
     void ClearState()
     {
-        groundContactCount = 0;
-        contactNormal = Vector3.zero;
+        groundContactCount = steepContactCount = 0; //Today I learned you can do that
+        contactNormal = steepNormal = Vector3.zero;
+    }
+    bool SnapToGround()
+    {
+        //Attempts to keep the player on the ground (to prevent e.g. flying off ramps). Returns whether attempt was successful
+
+        //Abort if the player has been off the ground for more than 1 step, or 2 or fewer steps after a jump.
+        //Why not 1 step? "Because of the collision data delay we're still considered grounded the step after the jump was initiated."
+        if (stepsSinceLastGrounded > 1 || stepsSinceLastJump <= 2)
+        {
+            return false;
+        }
+
+        //Abort if we're moving off so fast, we should fly off instead of snapping to the ground.
+        float speed = velocity.magnitude; //Length of the vector, i.e. not any direction info
+        if (speed > maxSnapSpeed)
+        {
+            return false;
+        }
+
+        //Abort if there's no ground below that we can snap to. The optional third paremeter here allows us to see what the ray hit!
+        //"RaycastHit is a struct, thus a value type. We can define a variable via RaycastHit hit, then pass it as a third argument to Physics.Raycast. But it's an output argument, which means that it's passed by reference as if it were an object reference. This must be explicitly indicated by adding the out modifier to it. The method is responsible for assigning a value to it. Besides that, it's also possible to declare the variable used for the output argument inside the argument list, instead of on a separate line. That's what we do here."
+        if (!Physics.Raycast(body.position, Vector3.down, out RaycastHit hit, probeDistance, probeMask))
+        {
+            //The hit data includes a normal vector, which we can use to check whether the surface we hit counts as ground.
+            return false;
+        }
+
+        //If we did hit something, check that it counts as ground (e.g. not a slope that's too steep)
+        if (hit.normal.y < GetMinDot(hit.collider.gameObject.layer))
+        {
+            return false;
+        }
+
+        //If we haven't aborted at this point then we've just lost contact with the ground but are still above ground, so we snap to it.
+        //The normal we found is going to become our contact normal.
+        groundContactCount = 1;
+        contactNormal = hit.normal;
+
+        //Adjust velocity to align with the ground
+        //"This works just like aligning the desired velocity, except that we have to keep the current speed and we'll calculate it explicitly instead of relying on ProjectOnContactPlane."
+        float dot = Vector3.Dot(velocity, hit.normal);
+        if (dot > 0f) //If we're already going downwards, don't realign 
+        {
+            velocity = (velocity - hit.normal * dot).normalized * speed;
+            //Okay, I can't really visualize how that realigning part works. TODO: research
+        }
+        return true; //NOTE: we'll still be ungrounded for like, a frame, so keep that in mind
+    }
+    float GetMinDot(int layer)
+    {
+        //Check if the layer is the stairs mask, and if so use that for minimum dot product, otherwise use normal ground
+        return (stairsMask & (1 << layer)) == 0 ? //"The mask is a bit mask, with one bit per layer. If the stairs is the eleventh layer then it matches the eleventh bit. We can create a value with that single bit set by using 1 << layer, which applies the left-shift operator to the number 1 an amount of times equal to the layer index, which is ten. The result would be the binary number 10000000000." "That would work if the mask has only a single layer selected, but let's support a mask for any combination of layers. We do that by taking the boolean AND of the mask and layer bit. If the result is zero then the layer is not part of the mask."
+            minGroundDotProduct : minStairsDotProduct;
+    }
+    bool CheckSteepContacts() //Used as an OnGround substitute when stuck in, say, a crevasse.
+    {
+        if (steepContactCount > 1)
+        {
+            steepNormal.Normalize();
+            if (steepNormal.y >= minGroundDotProduct)
+            {
+                groundContactCount = 1;
+                contactNormal = steepNormal;
+                return true;
+            }
+        }
+        return false;
     }
 
+    //New Input System: enable/disable controls
     protected void OnEnable()
     {
         controls.Player.Enable();
     }
-
     protected void OnDisable()
     {
         controls.Player.Disable();
