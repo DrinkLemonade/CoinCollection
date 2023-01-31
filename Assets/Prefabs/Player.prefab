@@ -67,7 +67,7 @@ BoxCollider:
   m_Enabled: 0
   serializedVersion: 2
   m_Size: {x: 0.5, y: 1.8, z: 0.5}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0, y: 0.9, z: 0}
 --- !u!114 &7160452702558925118
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -169,6 +169,9 @@ MonoBehaviour:
   probeMask:
     serializedVersion: 2
     m_Bits: 1075
+  stairsMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   animationConfig: {fileID: 11400000, guid: ec42967e08c08fb4ab58805bc3664bc6, type: 2}
   debugging: 0
   maxSpeed: 8
@@ -176,9 +179,11 @@ MonoBehaviour:
   maxAirAcceleration: 2.4
   jumpHeight: 6
   maxGroundAngle: 46
-  jumpAwayFromSlopes: 0
+  maxStairsAngle: 50
+  alwaysJumpStraightUp: 1
   maxSnapSpeed: 100
   probeDistance: 2.5
+  unityAnimator: {fileID: 7064952676668221471}
 --- !u!136 &8110998022228975863
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -192,7 +197,7 @@ CapsuleCollider:
   m_Radius: 0.33
   m_Height: 1.8
   m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0, y: 0.9, z: 0}
 --- !u!1 &7160452704021233336
 GameObject:
   m_ObjectHideFlags: 0
@@ -308,11 +313,16 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 95922273507661854, guid: c20397bf1592dc040b827e8716b0bd41, type: 3}
-      propertyPath: m_Controller
-      value: 
-      objectReference: {fileID: 9100000, guid: 713b772b1d0f74133a8ce94956352a48, type: 2}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c20397bf1592dc040b827e8716b0bd41, type: 3}
+--- !u!95 &7064952676668221471 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 95922273507661854, guid: c20397bf1592dc040b827e8716b0bd41, type: 3}
+  m_PrefabInstance: {fileID: 7160452703141359617}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &7156657107467589285 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4086279202973348, guid: c20397bf1592dc040b827e8716b0bd41, type: 3}

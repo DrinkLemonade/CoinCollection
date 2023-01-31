@@ -15831,9 +15831,10 @@ GameObject:
   - component: {fileID: 674113901}
   - component: {fileID: 674113900}
   - component: {fileID: 674113899}
+  - component: {fileID: 674113903}
   m_Layer: 0
   m_Name: OrbitCamera
-  m_TagString: Untagged
+  m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -15852,6 +15853,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   focus: {fileID: 644867040}
   distance: 5
+  focusRadius: 1.25
+  focusCentering: 0.5
+  rotationSpeed: 90
+  minVerticalAngle: -30
+  maxVerticalAngle: 60
+  alignDelay: 5
 --- !u!81 &674113900
 AudioListener:
   m_ObjectHideFlags: 0
@@ -15918,6 +15925,30 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 45, y: 0, z: 0}
+--- !u!114 &674113903
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 674113898}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97838bd2aac0f2f4a886b90146c378d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  focus: {fileID: 644867040}
+  distance: 5
+  focusRadius: 5
+  focusCentering: 0.5
+  rotationSpeed: 90
+  minVerticalAngle: -45
+  maxVerticalAngle: 45
+  alignDelay: 5
+  alignSmoothRange: 45
+  obstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!1 &680476463
 GameObject:
   m_ObjectHideFlags: 0
@@ -60886,7 +60917,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7160452702558925112, guid: 166134e804f0bb840924b7ba4604f433, type: 3}
       propertyPath: m_Enabled
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7160452702558925114, guid: 166134e804f0bb840924b7ba4604f433, type: 3}
       propertyPath: m_RootOrder
@@ -60914,7 +60945,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8110998022228975863, guid: 166134e804f0bb840924b7ba4604f433, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 166134e804f0bb840924b7ba4604f433, type: 3}

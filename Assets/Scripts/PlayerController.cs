@@ -57,24 +57,30 @@ public class PlayerController : MonoBehaviour
     float maxGroundAngle = 25f, maxStairsAngle = 50f;
     float minGroundDotProduct, minStairsDotProduct;
     [SerializeField]
-    bool alwaysJumpStraightUp = true;
+    bool alwaysJumpStraightUp = true; //if not on steep ground
     Vector3 contactNormal, steepNormal; //anything too steep to count as ground, but isn't a wall, ceiling, or anything in between
     [SerializeField, Range(0f, 100f)]
     float maxSnapSpeed = 100f; //Max speed at which we'll snap to slopes instead of flying off. "Note that setting both max speeds to the same value can produce inconsistent results due to precision limitations. It's better to make the max snap speed a bit higher or lower than the max speed."
     [SerializeField, Min(0f)]
     float probeDistance = 2.5f; //How far down we check for ground to snap down to, instead of flying off. Our little knight's center is 2 units off the floor, so check 0.5 units below its feet. "If too low, snapping can fail at steep angles or high velocities, while too high can lead to nonsensical snapping to ground far below."
 
+    [SerializeField]
+    Animator unityAnimator;
+
     void Awake()
     {
         controls = new GameControls();
         body = GetComponent<Rigidbody>();
         OnValidate();
+        UpdateAnimation();
+           // Play("Idle_SwordShield");
         //animator.PlayIdle(animationConfig.IdleAnimationSpeed);
     }
 
     // Update is called once per frame
     void Update()
     {
+        UpdateAnimation();
         //Movement
         Vector2 movementVector = controls.Player.Move.ReadValue<Vector2>();
         //We clamp the vector, which is like Normalize but allows inputs between 0 and 1, e.g. gamepad stick
@@ -344,6 +350,15 @@ public class PlayerController : MonoBehaviour
     protected void OnDisable()
     {
         controls.Player.Disable();
+    }
+
+    void UpdateAnimation()
+    {
+        if (OnGround)
+        {
+            Debug.Log("udpating aniamtion! speed is: " + body.velocity.magnitude);
+            unityAnimator.SetFloat("speed", body.velocity.magnitude);
+        }
     }
 
 }
