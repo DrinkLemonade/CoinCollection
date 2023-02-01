@@ -33,15 +33,16 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     Transform playerInputSpace = default; //How we determine the relative direction the controls move player towards, e.g. the orbit camera's space. By default this is the player, so movement is always relative to self, not to camera or anything
 
-    //Components
-    private Rigidbody body;
+    //Bodies
+    private Rigidbody body, connectedBody, previousConnectedBody;
+    Vector3 connectionWorldPosition, connectionLocalPosition; //An object animated by kinematics has no real velocity, so we figure out what it *should* be by keeping track of how much it's moved. We also keep track of where we're connected relative to the origin, so if we're on a rotating platform, we can orbit around the platform's origin. 
 
     //Movement from inputs
     private float movementX;
     private float movementY;
 
     //Speed and velocity
-    Vector3 velocity, desiredVelocity;
+    Vector3 velocity, desiredVelocity, connectionVelocity; //Connection is used for moving platforms etc
     [SerializeField, Range(0f, 100f)]
     float maxSpeed = 8f;
     [SerializeField, Range(0f, 100f)]
@@ -216,11 +217,16 @@ public class PlayerController : MonoBehaviour
                 groundContactCount += 1;
                 contactNormal += normal;
                 jumpReleaseUsed = false;
+                connectedBody = collision.rigidbody; //What we're standing on - used by moving platforms
             }
             else if (normal.y > -0.01f) //If we find ourselves wedged inside a narrow space, with multiple steep contacts, then we might be able to move by pushing against those contact points.
             {
                 steepContactCount += 1;
                 steepNormal += normal;
+                if (groundContactCount == 0) //Only accept a slope's rigidbody if there isn't a ground rigidbody to use
+                {
+                    connectedBody = collision.rigidbody;
+                }
             }
 
             //else onGround |= normal.y >= minGroundDotProduct;
@@ -256,7 +262,28 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            contactNormal = Vector3.up; //if jumping, don't fall back towards slopes!
+            contactNormal = Vector3.up; //If jumping, don't fall back towards slopes!
+        }
+
+        if (connectedBody)
+        {
+            if (connectedBody.isKinematic || connectedBody.mass >= body.mass) //Don't send yourself flying after, say, kicking a rock; only move alongside an object if it's big enough to move you, or using kinematics
+            {
+                UpdateConnectionState();
+            }
+        }
+    }
+
+    void UpdateConnectionState()
+    {
+        if (connectedBody == previousConnectedBody) //If we're still standing on the same body
+        {
+            //Figure out connected body's velocity. Find where we are relative to its origin, and convert that into world space (absolute?), because we know the body's transform's current position relative to where it was placed. Then, substract its world position from that. If there is no rotation nothing changes, but if there is, we take orbit into account, if I understand correctly.
+            Vector3 connectionMovement = connectedBody.transform.TransformPoint(connectionLocalPosition) -
+                connectionWorldPosition;
+            connectionVelocity = connectionMovement / Time.deltaTime;
+            connectionWorldPosition = body.position; //Since we're still standing on something, we know the connection point is where we are. That means we can figure out where we are *relative to the connected body's origin*... again, if I understand correctly.
+            connectionLocalPosition = connectedBody.transform.InverseTransformPoint(connectionWorldPosition);
         }
     }
     void AdjustVelocity()
@@ -266,8 +293,10 @@ public class PlayerController : MonoBehaviour
         Vector3 xAxis = ProjectOnContactPlane(Vector3.right).normalized;
         Vector3 zAxis = ProjectOnContactPlane(Vector3.forward).normalized;
 
-        float currentX = Vector3.Dot(velocity, xAxis);
-        float currentZ = Vector3.Dot(velocity, zAxis);
+        //We want to accelerate to match the speed of whatever we're connected to, on top of accelerating toward a desired velocity relative to the connection velocity.
+        Vector3 relativeVelocity = velocity - connectionVelocity;
+        float currentX = Vector3.Dot(relativeVelocity, xAxis);
+        float currentZ = Vector3.Dot(relativeVelocity, zAxis);
 
         //Let's add this to velocity. However, if we add speed to reach a desired velocity, we risk going too fast.
         //And if we remove speed to reach a desired velocity, we risk slowing down too much.
@@ -292,7 +321,9 @@ public class PlayerController : MonoBehaviour
     void ClearState()
     {
         groundContactCount = steepContactCount = 0; //Today I learned you can do that
-        contactNormal = steepNormal = Vector3.zero;
+        contactNormal = steepNormal = connectionVelocity = Vector3.zero;
+        previousConnectedBody = connectedBody;
+        connectedBody = null;
     }
     bool SnapToGround()
     {
@@ -339,6 +370,7 @@ public class PlayerController : MonoBehaviour
             velocity = (velocity - hit.normal * dot).normalized * speed;
             //Okay, I can't really visualize how that realigning part works. TODO: research
         }
+        connectedBody = hit.rigidbody;
         return true; //NOTE: we'll still be ungrounded for like, a frame, so keep that in mind
     }
     float GetMinDot(int layer)
