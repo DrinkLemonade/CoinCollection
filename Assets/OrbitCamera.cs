@@ -28,6 +28,24 @@ public class OrbitCamera : MonoBehaviour
     [SerializeField, Min(0f)]
     float alignDelay = 5f; //Automatically align the camera's angle behind the player after this delay
     float lastManualRotationTime;
+    [SerializeField, Range(0f, 90f)]
+    float alignSmoothRange = 45f; //Camera auto-realigns behind player increasingly fast, then past this angle, uses rotationSpeed
+
+    [SerializeField]
+    LayerMask obstructionMask = -1; //What we consider "obstructions". We'll move the camera so it doesn't intersect with those. This means small objects, or the player, can be ignored. In the future maybe I can make them fade away or something.
+    Vector3 CameraHalfExtends //Find the closest half of the "box" that represents everything our camera can see, so we can check if any terrain geometry intersects and avoid it. To increase performance, we could calculate this once and then recalculate it only when necessary (caching)
+    {
+        get
+        {
+            Vector3 halfExtends;
+            halfExtends.y =
+                regularCamera.nearClipPlane *
+                Mathf.Tan(0.5f * Mathf.Deg2Rad * regularCamera.fieldOfView);
+            halfExtends.x = halfExtends.y * regularCamera.aspect;
+            halfExtends.z = 0f;
+            return halfExtends;
+        }
+    }
 
     // Start is called before the first frame update
     void Awake()
@@ -62,6 +80,26 @@ public class OrbitCamera : MonoBehaviour
 
         Vector3 lookDirection = lookRotation * Vector3.forward; //Then, adjust our direction
         Vector3 lookPosition = focusPoint - lookDirection * distance; //We find position by moving it away from the focus's position in the opposite direction that the focus is looking
+
+        //Does something obstruct the view of the camera? First, find the target. Then, find the "box" that represents everything our camera can see. Find the half of that box closer to our camera ("CameraHalfExtends"). We cast from the camera's default distance to the focus, until we hit the "near plane", the rectangular face of the half-box. If we hit an obstruction in the meantime, then place the camera at a final distance of: distance from target to obstruction, + distance to the near plane.
+        //That being said: Sure, we know our ideal focus point (where the player is) is free of obstructions. But when we relax and don't focus perfectly on the player, that could put us inside geometry! Therefore we must cast from the ideal focus point (we know it's fine, the player is there) and not whatever we're looking at right now while we catch up to the player.
+        //"Note that this means that the camera's position can still end up inside geometry, but its near plane rectangle will always remain outside. Of course this could fail if the box cast already starts inside geometry. If the focus object is already intersecting geometry it's likely the camera will do so as well."
+        //"Pulling the camera closer to the focus point can get it so close that it enters the player. When the player intersects the camera's near plane it can get partially of even totally clipped. You could enforce a minimum distance to avoid this, but that would mean the camera remains inside other geometry. There is no perfect solution to this, but it can be mitigated by restricting vertical orbit angles, not making level geometry too tight, and reducing the camera's near clip plane distance."
+
+        Vector3 rectOffset = lookDirection * regularCamera.nearClipPlane;
+        Vector3 rectPosition = lookPosition + rectOffset;
+        Vector3 castFrom = focus.position;
+        Vector3 castLine = rectPosition - castFrom;
+        float castDistance = castLine.magnitude;
+        Vector3 castDirection = castLine / castDistance;
+
+        if (Physics.BoxCast(castFrom, CameraHalfExtends, castDirection, out RaycastHit hit, lookRotation, castDistance, obstructionMask))
+        {
+            //"If something is hit then we position the box as far away as possible, then we offset to find the corresponding camera position." Simple enough... sort of.
+            rectPosition = castFrom + castDirection * hit.distance;
+            lookPosition = rectPosition - rectOffset;
+        }
+
         transform.SetPositionAndRotation(lookPosition, lookRotation);
     }
     void UpdateFocusPoint()
@@ -143,7 +181,17 @@ public class OrbitCamera : MonoBehaviour
         }
 
         float headingAngle = GetAngle(movement / Mathf.Sqrt(movementDeltaSqr)); //Pass the normalized movement vector to headingAngle
-        orbitAngles.y = headingAngle; //New horizontal orbit angle
+        float deltaAbs = Mathf.Abs(Mathf.DeltaAngle(orbitAngles.y, headingAngle)); //Used by smooth realignment of rotation behind player
+        float rotationChange = Mathf.Min(Time.unscaledDeltaTime, movementDeltaSqr); //Use manual rotation speed to determine auto speed too. "By scaling the rotation speed by the minimum of the time delta and the square movement delta" (uhhh, this is getting complicated again), we can align very smoothly if we just need to adjust by a tiny angle
+        if (deltaAbs < alignSmoothRange) //We're not using the full rotation speed yet, so use the smooth speed
+        {
+            rotationChange *= deltaAbs / alignSmoothRange;
+        }
+        else if (180f - deltaAbs < alignSmoothRange) //Prevents the camera from rotating at full speed each time the player makes a 180° direction change
+        {
+            rotationChange *= (180f - deltaAbs) / alignSmoothRange;
+        }
+        orbitAngles.y = Mathf.MoveTowardsAngle(orbitAngles.y, headingAngle, rotationChange); //New horizontal orbit angle
 
         return true;
     }

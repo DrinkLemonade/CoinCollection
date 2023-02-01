@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1856180014891201167}
   - component: {fileID: -8512075210687216906}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Coin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -59,7 +59,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1952583955272562017}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: CoinPivot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -93,7 +93,7 @@ GameObject:
   - component: {fileID: 5158347081867355241}
   - component: {fileID: 6867986526466433532}
   - component: {fileID: 7375055831174976954}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: CoinSparkle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4907,7 +4907,7 @@ GameObject:
   - component: {fileID: 6288461924817696517}
   - component: {fileID: 4505465971586412274}
   - component: {fileID: 8896640691282741048}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: CoinCylinder
   m_TagString: Untagged
   m_Icon: {fileID: 0}

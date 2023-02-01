@@ -15,17 +15,23 @@ public class PlayerController : MonoBehaviour
     LayerMask probeMask = -1, stairsMask = -1; //Ground raycasts probe all layers by default, but we'll change that in the editor, so we don't probe "ignore raycasts" and agents
     //"by using a mask we don't rely on a hard-coded layer name and are more flexible, which also makes experimentation easier."
 
-    //Animation
+    //Animation and model
     [SerializeField]
     PlayerAnimatorConfig animationConfig = default;
-    PlayerAnimator animator;
+    //PlayerAnimator animator;
+    [SerializeField]
+    Animator unityAnimator;
+    [SerializeField]
+    GameObject playerModelObject;
 
     //Debug
     [SerializeField]
     bool debugging = false;
  
-    //Controls
+    //Controls and input
     public GameControls controls;
+    [SerializeField]
+    Transform playerInputSpace = default; //How we determine the relative direction the controls move player towards, e.g. the orbit camera's space. By default this is the player, so movement is always relative to self, not to camera or anything
 
     //Components
     private Rigidbody body;
@@ -64,8 +70,6 @@ public class PlayerController : MonoBehaviour
     [SerializeField, Min(0f)]
     float probeDistance = 2.5f; //How far down we check for ground to snap down to, instead of flying off. Our little knight's center is 2 units off the floor, so check 0.5 units below its feet. "If too low, snapping can fail at steep angles or high velocities, while too high can lead to nonsensical snapping to ground far below."
 
-    [SerializeField]
-    Animator unityAnimator;
 
     void Awake()
     {
@@ -89,8 +93,22 @@ public class PlayerController : MonoBehaviour
         movementX = movementVector.x;
         movementY = movementVector.y;
         //Input, instead of setting player's velocity directly (no inertia), sets the desired velocity (in meters per second).
-        desiredVelocity = new Vector3(movementX, 0f, movementY) * maxSpeed;
-
+        //But first, let's see if we're determining velocity relative to something, e.g. the camera
+        if (playerInputSpace)
+        {
+            //Don't take the camera's vertical angle into account!
+            Vector3 forward = playerInputSpace.forward;
+            forward.y = 0f;
+            forward.Normalize();
+            Vector3 right = playerInputSpace.right;
+            right.y = 0f;
+            right.Normalize();
+            desiredVelocity = (forward * movementY + right * movementX) * maxSpeed;
+        }
+        else
+        {
+            desiredVelocity = new Vector3(movementX, 0f, movementY) * maxSpeed;
+        }
         //Jumping
         //If we don't invoke FixedUpdate next frame, normally the desire to jump would be forgotten.
         //We remember it using the OR operand, equivalent to x = x || y. Now it remains true once enabled, until explicitly made false.
@@ -268,6 +286,8 @@ public class PlayerController : MonoBehaviour
         //else if velocity.x > desired.x then velocity.x = max between velocity+change OR desired"
 
         velocity += xAxis * (newX - currentX) + zAxis * (newZ - currentZ);
+
+        FaceVelocityDirection();
     }
     void ClearState()
     {
@@ -359,6 +379,16 @@ public class PlayerController : MonoBehaviour
             Debug.Log("udpating aniamtion! speed is: " + body.velocity.magnitude);
             unityAnimator.SetFloat("speed", body.velocity.magnitude);
         }
+    }
+
+    void FaceVelocityDirection()
+    {
+        //Make rotation equal to the angle of our current velocity
+        //TODO: See if I need to normalize...?
+        //Quaternion newAngle = Quaternion.Euler(body.velocity.x, 0f, body.velocity.z);
+        //Vector3 xyVelocity = new Vector3(velocity.x, 0f, velocity.z);
+        //playerModelObject.GetComponent<Transform>().eulerAngles = xyVelocity;//Rotate(0f, , 0f);
+        //= newAngle;
     }
 
 }

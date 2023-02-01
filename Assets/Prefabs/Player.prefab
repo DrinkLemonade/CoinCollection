@@ -173,7 +173,10 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   animationConfig: {fileID: 11400000, guid: ec42967e08c08fb4ab58805bc3664bc6, type: 2}
+  unityAnimator: {fileID: 7064952676668221471}
+  playerModelObject: {fileID: 7159191778070660359}
   debugging: 0
+  playerInputSpace: {fileID: 7160452702558925114}
   maxSpeed: 8
   maxAcceleration: 24
   maxAirAcceleration: 2.4
@@ -183,7 +186,6 @@ MonoBehaviour:
   alwaysJumpStraightUp: 1
   maxSnapSpeed: 100
   probeDistance: 2.5
-  unityAnimator: {fileID: 7064952676668221471}
 --- !u!136 &8110998022228975863
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -326,6 +328,11 @@ Animator:
 --- !u!4 &7156657107467589285 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4086279202973348, guid: c20397bf1592dc040b827e8716b0bd41, type: 3}
+  m_PrefabInstance: {fileID: 7160452703141359617}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &7159191778070660359 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1556040939566342, guid: c20397bf1592dc040b827e8716b0bd41, type: 3}
   m_PrefabInstance: {fileID: 7160452703141359617}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &7160452703799068000
