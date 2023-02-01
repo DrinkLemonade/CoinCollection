@@ -14,9 +14,9 @@ TagManager:
   - 
   - 
   - Agent
-  - Detailed
-  - Stairs
-  - 
+  - DetailedGeometry
+  - RampUnderStairs
+  - GeometryCameraCanClip
   - 
   - 
   - 

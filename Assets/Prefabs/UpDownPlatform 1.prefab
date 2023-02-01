@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 510241190754469334}
   - component: {fileID: 510241190754469333}
   - component: {fileID: 510241190754469340}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: UpDownPlatform 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}

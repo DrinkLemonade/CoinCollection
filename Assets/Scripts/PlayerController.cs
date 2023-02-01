@@ -42,7 +42,7 @@ public class PlayerController : MonoBehaviour
     private float movementY;
 
     //Speed and velocity
-    Vector3 velocity, desiredVelocity, connectionVelocity; //Connection is used for moving platforms etc
+    Vector3 velocity, relativeVelocity, desiredVelocity, connectionVelocity; //Connection is used for moving platforms etc. Relative is used for animation
     [SerializeField, Range(0f, 100f)]
     float maxSpeed = 8f;
     [SerializeField, Range(0f, 100f)]
@@ -279,8 +279,7 @@ public class PlayerController : MonoBehaviour
         if (connectedBody == previousConnectedBody) //If we're still standing on the same body
         {
             //Figure out connected body's velocity. Find where we are relative to its origin, and convert that into world space (absolute?), because we know the body's transform's current position relative to where it was placed. Then, substract its world position from that. If there is no rotation nothing changes, but if there is, we take orbit into account, if I understand correctly.
-            Vector3 connectionMovement = connectedBody.transform.TransformPoint(connectionLocalPosition) -
-                connectionWorldPosition;
+            Vector3 connectionMovement = connectedBody.transform.TransformPoint(connectionLocalPosition) - connectionWorldPosition;
             connectionVelocity = connectionMovement / Time.deltaTime;
             connectionWorldPosition = body.position; //Since we're still standing on something, we know the connection point is where we are. That means we can figure out where we are *relative to the connected body's origin*... again, if I understand correctly.
             connectionLocalPosition = connectedBody.transform.InverseTransformPoint(connectionWorldPosition);
@@ -294,7 +293,7 @@ public class PlayerController : MonoBehaviour
         Vector3 zAxis = ProjectOnContactPlane(Vector3.forward).normalized;
 
         //We want to accelerate to match the speed of whatever we're connected to, on top of accelerating toward a desired velocity relative to the connection velocity.
-        Vector3 relativeVelocity = velocity - connectionVelocity;
+        relativeVelocity = velocity - connectionVelocity;
         float currentX = Vector3.Dot(relativeVelocity, xAxis);
         float currentZ = Vector3.Dot(relativeVelocity, zAxis);
 
@@ -408,8 +407,8 @@ public class PlayerController : MonoBehaviour
     {
         if (OnGround)
         {
-            Debug.Log("udpating aniamtion! speed is: " + body.velocity.magnitude);
-            unityAnimator.SetFloat("speed", body.velocity.magnitude);
+            Debug.Log("udpating animation! speed is: " + relativeVelocity.magnitude);
+            unityAnimator.SetFloat("speed", relativeVelocity.magnitude);
         }
     }
 

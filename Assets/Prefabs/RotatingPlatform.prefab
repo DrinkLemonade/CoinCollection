@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 510241190754469339}
   - component: {fileID: 510241190754469333}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: RotatingPlatform
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -68,7 +68,7 @@ GameObject:
   - component: {fileID: 3476727316481614956}
   - component: {fileID: 4809909947760130907}
   - component: {fileID: 2500403914492991986}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: RotatingPlatformGeometry
   m_TagString: Untagged
   m_Icon: {fileID: 0}

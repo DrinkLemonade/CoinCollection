@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7160452702558925114}
   - component: {fileID: 7160452702558925115}
-  - component: {fileID: 7160452702558925112}
   - component: {fileID: 7160452702558925118}
   - component: {fileID: 7160452702558925119}
   - component: {fileID: 8110998022228975863}
@@ -55,19 +54,6 @@ Rigidbody:
   m_Interpolate: 1
   m_Constraints: 112
   m_CollisionDetection: 0
---- !u!65 &7160452702558925112
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7160452702558925057}
-  m_Material: {fileID: 13400000, guid: 4e3e343fc57ed62419a5f4b7cdbec530, type: 2}
-  m_IsTrigger: 0
-  m_Enabled: 0
-  serializedVersion: 2
-  m_Size: {x: 0.5, y: 1.8, z: 0.5}
-  m_Center: {x: 0, y: 0.9, z: 0}
 --- !u!114 &7160452702558925118
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -168,10 +154,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   probeMask:
     serializedVersion: 2
-    m_Bits: 1075
+    m_Bits: 3123
   stairsMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 1024
   animationConfig: {fileID: 11400000, guid: ec42967e08c08fb4ab58805bc3664bc6, type: 2}
   unityAnimator: {fileID: 7064952676668221471}
   playerModelObject: {fileID: 7159191778070660359}

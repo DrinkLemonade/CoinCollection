@@ -108,4 +108,4 @@ MonoBehaviour:
   alignSmoothRange: 45
   obstructionMask:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 513
