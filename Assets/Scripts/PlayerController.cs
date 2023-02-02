@@ -18,6 +18,7 @@ public class PlayerController : MonoBehaviour
     //Animation and model
     [SerializeField]
     PlayerAnimatorConfig animationConfig = default;
+    Quaternion lastDirectionLooked; //Which direction we're looking
     //PlayerAnimator animator;
     [SerializeField]
     Animator unityAnimator;
@@ -93,6 +94,7 @@ public class PlayerController : MonoBehaviour
         movementVector = Vector2.ClampMagnitude(movementVector, 1f);
         movementX = movementVector.x;
         movementY = movementVector.y;
+
         //Input, instead of setting player's velocity directly (no inertia), sets the desired velocity (in meters per second).
         //But first, let's see if we're determining velocity relative to something, e.g. the camera
         if (playerInputSpace)
@@ -110,6 +112,12 @@ public class PlayerController : MonoBehaviour
         {
             desiredVelocity = new Vector3(movementX, 0f, movementY) * maxSpeed;
         }
+
+        if (desiredVelocity.magnitude > 0.01f && OnGround && !GameManager.i.gameIsPaused) //Not sure why this happens during paused
+        {
+            playerModelObject.transform.rotation = Quaternion.Slerp(playerModelObject.transform.rotation, Quaternion.LookRotation(desiredVelocity), 0.15F);
+        }
+
         //Jumping
         //If we don't invoke FixedUpdate next frame, normally the desire to jump would be forgotten.
         //We remember it using the OR operand, equivalent to x = x || y. Now it remains true once enabled, until explicitly made false.
@@ -120,8 +128,9 @@ public class PlayerController : MonoBehaviour
 
         if (controls.Player.Menu.WasReleasedThisFrame()) //Hacky restart, for now
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        }
+            GameManager.i.TogglePause();
+            //SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        } 
     }
     void FixedUpdate()
     {
@@ -405,11 +414,13 @@ public class PlayerController : MonoBehaviour
 
     void UpdateAnimation()
     {
-        if (OnGround)
+        if (OnGround || OnSteep)
         {
+            //Si déplacement vecteur Z négatif etc passer un booléen?
             Debug.Log("udpating animation! speed is: " + relativeVelocity.magnitude);
             unityAnimator.SetFloat("speed", relativeVelocity.magnitude);
         }
+        else unityAnimator.SetFloat("speed", 6);
     }
 
     void FaceVelocityDirection()

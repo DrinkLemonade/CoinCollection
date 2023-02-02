@@ -7,7 +7,13 @@ public class GameManager : MonoBehaviour
     public static GameManager i;
     public GameSession currentSession;
 
-    public KeyCode keyUp, keyDown, keyLeft, keyRight, keyJump, keyPause;
+    public bool gameIsPaused = false;
+
+    [SerializeField]
+    int coinPointPool = 100; //How many points can be collected by getting all the coins
+    //Maybe I should put this in GameSession...? But everything in GameSession can't be modified from the editor, hm
+
+    //public KeyCode keyUp, keyDown, keyLeft, keyRight, keyJump, keyPause;
     //KeyCode[] controlScheme;
 
     // Start is called before the first frame update
@@ -26,10 +32,10 @@ public class GameManager : MonoBehaviour
     private void Awake()
     {
         i = this;
-        SetDefaultControls();
+        //SetDefaultControls();
     }
 
-    void SetDefaultControls()
+    /*void SetDefaultControls()
     {
         keyUp = KeyCode.Z;
         keyDown = KeyCode.S;
@@ -37,7 +43,7 @@ public class GameManager : MonoBehaviour
         keyRight = KeyCode.D;
         keyJump = KeyCode.Space;
         keyPause = KeyCode.Return;
-    }
+    }*/
 
     static void NewGame()
     {
@@ -45,5 +51,20 @@ public class GameManager : MonoBehaviour
         i.currentSession = new GameSession(i);
         i.currentSession.currentSecondsLeft = i.currentSession.startSecondsLeft;
         GUI.i.UpdateDisplay(i.currentSession);
+    }
+
+    public void TogglePause()
+    {
+        gameIsPaused = !gameIsPaused; //Toggle
+        if (gameIsPaused)
+        {
+            Time.timeScale = 0;
+            //Make menus appear and stuff
+        }
+        else
+        {
+            Time.timeScale = 1;
+            //Make menus disappear
+        }
     }
 }

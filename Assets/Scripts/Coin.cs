@@ -6,7 +6,7 @@ using System;
 public class Coin : MonoBehaviour
 {
     float rot = 0;
-    private readonly float rotSpeed = 0.5f;
+    private readonly float angleIncreasePerSecond = 90;
 
     [Range(0, 10)]
     public int pointsWorth = 0;
@@ -33,7 +33,7 @@ public class Coin : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        rot += rotSpeed;
+        rot += angleIncreasePerSecond * Time.deltaTime;
         myTransform.localRotation = Quaternion.Euler(0f, rot, myTransform.localRotation.z);
     }
 }

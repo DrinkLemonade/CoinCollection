@@ -162,10 +162,10 @@ MonoBehaviour:
   unityAnimator: {fileID: 7064952676668221471}
   playerModelObject: {fileID: 7159191778070660359}
   debugging: 0
-  playerInputSpace: {fileID: 7160452702558925114}
+  playerInputSpace: {fileID: 1801488280162272114, guid: 9c4af23f767b8684abbfbf0a39e17f31, type: 3}
   maxSpeed: 8
   maxAcceleration: 24
-  maxAirAcceleration: 2.4
+  maxAirAcceleration: 6
   jumpHeight: 6
   maxGroundAngle: 46
   maxStairsAngle: 50

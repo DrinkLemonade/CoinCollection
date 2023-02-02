@@ -64,6 +64,7 @@ public class OrbitCamera : MonoBehaviour
     //Happens after update?
     void LateUpdate()
     {
+        if (GameManager.i.gameIsPaused) return; //Camera doesn't update and can't be manually used while paused
         UpdateFocusPoint(); //Did the player move? If so, find new focus point
 
         //Find how we're rotating, and constrain the rotation if necessary
