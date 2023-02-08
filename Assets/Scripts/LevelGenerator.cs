@@ -5,12 +5,15 @@ using UnityEngine.UIElements;
 using UnityEngine.ProBuilder;
 using UnityEngine.ProBuilder.MeshOperations;
 using Unity.VisualScripting;
+using System;
 
 public class LevelGenerator : MonoBehaviour
 {
     public Texture2D mapTexture;
+
+    [NonSerialized]
     public GameObject myCube; //instance created each loop
-    public GameObject CubePrefab; //prefab
+    //public GameObject CubePrefab; //prefab
     private Color[,] colorArray;
     private ProBuilderMesh[,] meshArray;
 
@@ -18,7 +21,10 @@ public class LevelGenerator : MonoBehaviour
 
     private const int startX = 0;
     private const int startZ = 0;
-    private const int tileSize = 1; //in units
+    private const float tileSize = 1f; //in units
+
+    [SerializeField]
+    GameObject TorchPrefab; //prefab
 
     // Start is called before the first frame update
     void Start()
@@ -63,14 +69,27 @@ public class LevelGenerator : MonoBehaviour
             //Debug.Log("New row");
             for (int j = 0; j < len; j++)
             {
-                if (colorArray[i,j] == Color.white)
+                Color col = colorArray[i, j];
+                Debug.Log("Creating a cube at array position: " + i + "," + j + ", COLOR R IS: " + col.r);
+
+                if (col == Color.white)
                 {
                     continue; //don't create anything
                 }
-                Debug.Log("Creating a cube at array position: " + i + "," + j);
+                else if (col == Color.red) //255 or 1
+                {
+                    Debug.Log("Cube and torch");
+                    float altHeight = (float)System.Math.Ceiling((1f - colorArray[i-1, j].b) * 25); //create block, same height as block to the left
+                    CreateCube(i, j, altHeight);
+                    CreateTorch(i, j, altHeight + 0.7f);//add torch height
+                    continue;
+                }
+
+                float height = (float)System.Math.Ceiling((1f - colorArray[i, j].b) * 25); //Use blue component. Black (wall, 25) to whiteish (1, lowest floor)
 
                 //meshArray[i,j] =
-                CreatePlaneTile(i, 0, j); 
+                //CreatePlaneTile(i, 0, j);
+                CreateCube(i, j, height);
             }
         }
     }
@@ -91,34 +110,29 @@ public class LevelGenerator : MonoBehaviour
         return m_Mesh;
     }
 
-    void CreateCubeOld(int i, int j)
+    ProBuilderMesh CreateCube(int x, int z, float height)
     {
-        GameObject tileInstance;
+        Vector3 size = new Vector3(tileSize, height, tileSize);
+        m_Mesh = ShapeGenerator.GenerateCube(PivotLocation.Center, size);
+        m_Mesh.GetComponent<MeshRenderer>().sharedMaterial = BuiltinMaterials.defaultMaterial;
+        m_Mesh.transform.localPosition = new Vector3(x, 0 + (height/2), z); //incredibly inefficient, but it works!
+        //Positions will range from -12.75 to 12.75. -13 will probably be lava or whatever
 
-        //instantiate
-        tileInstance = Instantiate(CubePrefab) as GameObject;//, location, Quaternion.identity) as GameObject;
         System.Random RNG = new System.Random();
-        float colRand = (RNG.Next(50) + 50) / 10; //0.5 to 1
-        Debug.Log("Colrand: " + colRand);
+        float colRand = (RNG.Next(10) + 90) / 10; //0.5 to 1
         colRand /= 10; //0.5 to 1
-        Debug.Log("Colrand2: " + colRand);
-        tileInstance.GetComponent<Renderer>().material.color = new Color(colRand, colRand, colRand, 1);
-        //tileInstance.transform.SetParent(GameObject.Find("Canvas").transform, false);
+        m_Mesh.GetComponent<Renderer>().material.color = new Color(colRand, colRand, colRand, 1);
+        m_Mesh.AddComponent<MeshCollider>();
+        m_Mesh.transform.SetParent(this.gameObject.transform, false);
 
-        //CubePrefab tileController = tileInstance.GetComponent<CubePrefab>();
-        //tileController.gridX = j;
-        //tileController.gridY = i;
-        //tileGrid[j, i] = tileInstance; //stocker une struct avec les infos sur la tile ?
+        return m_Mesh;
+    }
 
-        int newX = startX + (j * tileSize);
-        int newZ = startZ - (i * tileSize);
-
-        tileInstance.transform.localPosition = new Vector3(newX, 0, newZ);
-        //tileInstance.transform.localPosition = new Vector3(startX + (xOffset * xBetweenTiles) + (xOffset * tileSize) - ((26 / 4) * tileSize), startY + (yOffset * yBetweenTiles) + (yOffset * tileSize), 0);
-        //tileInstance.transform.localScale = new Vector3(1, 1, 0); // change its local scale in x y z format
-
-        //set tile size
-        //Transform myRect = tileInstance.GetComponent<Transform>();
-        //myRect.localScale = new Vector2(tileSize, tileSize);
+    void CreateTorch(int x, int z, float y)
+    {
+        //instantiate
+        GameObject torchInstance = Instantiate(TorchPrefab);
+        torchInstance.transform.localPosition = new Vector3(x, y, z);
+        torchInstance.transform.SetParent(this.gameObject.transform, false);
     }
 }

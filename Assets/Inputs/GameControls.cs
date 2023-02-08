@@ -328,15 +328,15 @@ public partial class @GameControls : IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 },
                 {
-                    ""name"": ""up"",
-                    ""id"": ""c381938f-6794-46bd-9a1b-bd2edbb2f2e0"",
+                    ""name"": """",
+                    ""id"": ""c2740ff1-db41-4a70-977f-240cd03be8ff"",
                     ""path"": ""<Keyboard>/#(M)"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Keyboard&Mouse"",
                     ""action"": ""Menu"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true
+                    ""isPartOfComposite"": false
                 }
             ]
         },

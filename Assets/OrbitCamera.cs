@@ -97,9 +97,17 @@ public class OrbitCamera : MonoBehaviour
         if (Physics.BoxCast(castFrom, CameraHalfExtends, castDirection, out RaycastHit hit, lookRotation, castDistance, obstructionMask))
         {
             //"If something is hit then we position the box as far away as possible, then we offset to find the corresponding camera position." Simple enough... sort of.
-            rectPosition = castFrom + castDirection * hit.distance;
-            lookPosition = rectPosition - rectOffset;
+
+            //First, check that we're not positioning inside geometry somehow...
+            if (!Physics.BoxCast(rectPosition - rectOffset,Vector3.one,Vector3.zero,Quaternion.identity, 0)) //nothing
+            {
+                rectPosition = castFrom + castDirection * hit.distance;
+                lookPosition = rectPosition - rectOffset;
+            }
+            ExtDebug.DrawBoxCastBox(rectPosition - rectOffset, Vector3.one, Quaternion.identity, Vector3.zero, 0, Color.yellow);
+            Debug.Log("Player Y:" + focus.position.y + "/ Camera Y: " + lookPosition.y);
         }
+        ExtDebug.DrawBoxCastBox(castFrom, CameraHalfExtends, lookRotation, castDirection, castDistance, Color.red);
 
         transform.SetPositionAndRotation(lookPosition, lookRotation);
     }

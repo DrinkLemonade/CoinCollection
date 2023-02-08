@@ -417,7 +417,7 @@ public class PlayerController : MonoBehaviour
         if (OnGround || OnSteep)
         {
             //Si déplacement vecteur Z négatif etc passer un booléen?
-            Debug.Log("udpating animation! speed is: " + relativeVelocity.magnitude);
+            //Debug.Log("udpating animation! speed is: " + relativeVelocity.magnitude);
             unityAnimator.SetFloat("speed", relativeVelocity.magnitude);
         }
         else unityAnimator.SetFloat("speed", 6);
