@@ -18,6 +18,7 @@ public class LevelGenerator : MonoBehaviour
     private ProBuilderMesh[,] meshArray;
 
     ProBuilderMesh m_Mesh;
+    List<ProBuilderMesh> meshList;
 
     private const int startX = 0;
     private const int startZ = 0;
@@ -80,7 +81,8 @@ public class LevelGenerator : MonoBehaviour
                 {
                     Debug.Log("Cube and torch");
                     float altHeight = (float)System.Math.Ceiling((1f - colorArray[i-1, j].b) * 25); //create block, same height as block to the left
-                    CreateCube(i, j, altHeight);
+                    CombineMeshes.Combine(meshList, CreateCube(i, j, altHeight));
+
                     CreateTorch(i, j, altHeight + 0.7f);//add torch height
                     continue;
                 }
@@ -89,7 +91,7 @@ public class LevelGenerator : MonoBehaviour
 
                 //meshArray[i,j] =
                 //CreatePlaneTile(i, 0, j);
-                CreateCube(i, j, height);
+                CombineMeshes.Combine(meshList, CreateCube(i, j, height));
             }
         }
     }
