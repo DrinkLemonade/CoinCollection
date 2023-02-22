@@ -47,9 +47,28 @@ public class LevelGenAlt : MonoBehaviour
     List<int> _tris = new List<int>();
     List<Vector2> _uvs = new List<Vector2>();
 
-    Mesh levelMesh;
+    [System.NonSerialized]
+    public Mesh levelMesh;
+
     [SerializeField]
     MeshFilter levelMeshFilter;
+    [SerializeField]
+    MeshCollider levelMeshCollider;
+
+    int _atlasGriddSize = 8;
+
+    //Cache an array we use repeatedly
+    Vector3[] vertexArray = new Vector3[]
+    {
+                new Vector3( tileSize / 2, 0, tileSize / 2),
+                new Vector3( tileSize / 2, 0,  tileSize / 2),
+                new Vector3( - (tileSize / 2), 0, tileSize / 2),
+                new Vector3( - (tileSize / 2), 0,  tileSize / 2)
+    };
+
+    float[] _neighbourInfos = new float[4];
+
+    int[] trisOrder = new int[6] { 0, 1, 2, 2, 1, 3 };
 
     [SerializeField]
     GameObject text3D;
@@ -62,11 +81,7 @@ public class LevelGenAlt : MonoBehaviour
         levelMeshFilter.sharedMesh = levelMesh;
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+
 
     /// <summary>
     /// Retourne un tableau 2D de couleur à partir d'un texture
@@ -102,11 +117,10 @@ public class LevelGenAlt : MonoBehaviour
             //Debug.Log("New row");
             for (int j = 0; j < len; j++)
             {
-                Color col = colorArray[i, j];
-                Debug.Log("Creating a cube at array position: " + i + "," + j + ", COLOR R IS: " + col.r);
+                float height = ExtractHeight(colorArray[i, j]);  //Use blue component. Black (wall, 25) to whiteish (1, lowest floor)
+                if (height > 0) CreateCube(i, j, height);
 
-
-                if (col == c_nothing)
+                /*if (col == c_nothing)
                 {
                     continue; //don't create anything
                 }
@@ -129,106 +143,105 @@ public class LevelGenAlt : MonoBehaviour
 
                     //CreateSpecialObject(i, j, altHeight + 0.7f, prefab);
                     continue;
-                }
+                }*/
             }
         }
-        CreateCube(0, 0, 10);
         levelMesh.SetVertices(_vertices);
         levelMesh.SetTriangles(_tris,0);
+        levelMesh.SetUVs(0, _uvs); //Added
+        levelMesh.RecalculateNormals(); //Added
         Debug.Log(_tris.Count);
-    }
 
-    ProBuilderMesh CreatePlaneTile(int x, int y, int z)
-    {
-        m_Mesh = ShapeGenerator.GeneratePlane(PivotLocation.Center, 1, 1, 0, 0, Axis.Up);
-        m_Mesh.GetComponent<MeshRenderer>().sharedMaterial = BuiltinMaterials.defaultMaterial;
-        m_Mesh.transform.localPosition = new Vector3(x, y, z); //incredibly inefficient, but it works!
-
-        System.Random RNG = new System.Random();
-        float colRand = (RNG.Next(10) + 90) / 10; //0.5 to 1
-        colRand /= 10; //0.5 to 1
-        m_Mesh.GetComponent<Renderer>().material.color = new Color(colRand, colRand, colRand, 1);
-        m_Mesh.AddComponent<MeshCollider>();
-        m_Mesh.transform.SetParent(this.gameObject.transform, false);
-
-        return m_Mesh;
-    }
-
-    public static Vector3 DirectionFromAngleXY(float _angleInDegrees)
-    {
-        return new Vector3(Mathf.Sin(_angleInDegrees * Mathf.Deg2Rad), Mathf.Cos(_angleInDegrees * Mathf.Deg2Rad), 0);
-    }
-
-    public static Vector3 DirectionFromAngleXZ(float _angleInDegrees)
-    {
-        return new Vector3(Mathf.Sin(_angleInDegrees * Mathf.Deg2Rad), 0, Mathf.Cos(_angleInDegrees * Mathf.Deg2Rad));
+        levelMeshCollider.sharedMesh = levelMesh;
     }
 
     void CreateCube(int x, int z, float height)
     {
+        int _vertsCount = _vertices.Count; //Added
+
+        //The way we do it with UVs allows us up to 64 textures but no blending between. We can use this for emissive or reflective surfaces via shader
+        //We could use vertexcolor (1 solid color, soft blending)
+        //Or a shader which would blend textures, but limit us to 4
+
         //Top face
-        _vertices.Add(new Vector3(x - (tileSize / 2), height, z - (tileSize / 2)));
+        _vertices.Add(new Vector3(x + (tileSize / 2), height, z + (tileSize / 2)));
         _vertices.Add(new Vector3(x + (tileSize / 2), height, z - (tileSize / 2)));
         _vertices.Add(new Vector3(x - (tileSize / 2), height, z + (tileSize / 2)));
-        _vertices.Add(new Vector3(x + (tileSize / 2), height, z + (tileSize / 2)));
+        _vertices.Add(new Vector3(x - (tileSize / 2), height, z - (tileSize / 2)));
 
-        Vector3[] vertexArray = new Vector3[]
+        AddUvs(3, 6); //Add green on the atlas. Lower left is 0,0, the texture is 8x8 
+        //An atlas goes from 0 to 1, it's normalized. Each step is 0.125, so 1/8
+
+        //i ==0 bottom  (from top view)
+        //i ==1 left (from top view)
+        //i ==2 top (from top view)
+        //i ==3 right left (from top view)
+
+        GetNeigbours(x, z, _neighbourInfos);
+
+        int _createdFaceCount = 0;
+
+        //Side faces creation
+        for (int i = 0; i < 4; i++)
         {
-            new Vector3(x + (tileSize / 2), height, z + (tileSize / 2)),
-            new Vector3(x + (tileSize / 2), 0, z + (tileSize / 2)),
-            new Vector3(x - (tileSize / 2), height, z + (tileSize / 2)),
-            new Vector3(x - (tileSize / 2), 0, z + (tileSize / 2))
-        };
+            float _neighbourHeight = _neighbourInfos[i];
+            if (height == _neighbourHeight) continue; //Don't create face if adjacent to another
+            if (height < _neighbourHeight) continue;
 
-        Vector3 dirTemp = new Vector3(0,0,1); //Forward?
+            //Adapt the height of the side acoording its neighbour
+            vertexArray[1].y = height;
+            vertexArray[3].y = height;
 
-        for(int i = 0; i < 4; i++)
-        {
-            float angle = i * 90;
-            Vector3 dir = DirectionFromAngleXZ(angle);
-            Quaternion rotation = Quaternion.LookRotation(dirTemp, dir);
+            vertexArray[0].y = _neighbourHeight;
+            vertexArray[2].y = _neighbourHeight;
+
+
+            Quaternion rotation = Quaternion.Euler(new Vector3(0, i * 90, 0));
             Matrix4x4 m = Matrix4x4.Rotate(rotation);
-            Vector3 finalPos = m.MultiplyPoint3x4(dir);
-            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cube.transform.position = finalPos;
-            Debug.Log(finalPos + ", dir:" + dir + ", angle:" + angle);
+
+            _createdFaceCount++;
+
+            //Rotate face vertices
+            for (int j = 0; j < vertexArray.Length; j++)
+            {
+                _vertices.Add(m.MultiplyPoint3x4(vertexArray[j]) + new Vector3(x, 0, z)); //Rotation + Offset in the world
+            }
+
+            AddUvs(7, 7); //Coordinates on the texture atlas.
         }
 
-        //Order is important
-        //Tri 1
-
-        for (int i = 0; i < 2; i++)
+        //Triangles creation
+        for (int i = 0; i < _createdFaceCount + 1; i++)
         {
-            _tris.Add(0 + i*4);
-            _tris.Add(2 + i*4);
-            _tris.Add(1 + i*4);
-
-            _tris.Add(2 + i * 4);
-            _tris.Add(3 + i * 4);
-            _tris.Add(1 + i * 4);
+            for (int j = 0; j < trisOrder.Length; j++)
+            {
+                _tris.Add(_vertsCount + trisOrder[j] + (i * 4));
+            }
         }
+    }
 
-
-            //TODO: UV, il faudra ajouter un meshrenderer et meshfilter sur levelgen, quand on déclare le mesh. MeshFilter.sharedMesh = le mesh créé, puis lui fournir les infos qu'on a calculé (triangles, etc) avec Mesh.SetVertices, SetTriangles et SetUVs. Sans UV il prend la couleur du 1er pixel sur le material
-
-
-
-
-
-
-            /*Vector3 size = new Vector3(tileSize, height, tileSize);
-            m_Mesh = ShapeGenerator.GenerateCube(PivotLocation.Center, size);
-            m_Mesh.GetComponent<MeshRenderer>().sharedMaterial = BuiltinMaterials.defaultMaterial;
-            m_Mesh.transform.localPosition = new Vector3(x, 0 + (height/2), z); //incredibly inefficient, but it works!
-            //Positions will range from -12.75 to 12.75. -13 will probably be lava or whatever
-
-            System.Random RNG = new System.Random();
-            float colRand = (RNG.Next(10) + 90) / 10; //0.5 to 1
-            colRand /= 10; //0.5 to 1
-            m_Mesh.GetComponent<Renderer>().material.color = new Color(colRand, colRand, colRand, 1);
-            m_Mesh.AddComponent<MeshCollider>();
-            m_Mesh.transform.SetParent(this.gameObject.transform, false);*/
-        }
+    void GetNeigbours(int x, int z, float[] _result)
+    {
+        if (z + 1 < colorArray.GetLength(1) - 1) _result[0] = ExtractHeight(colorArray[x, z + 1]); //Top
+        if (x + 1 < colorArray.GetLength(0) - 1) _result[1] = ExtractHeight(colorArray[x + 1, z]); //Right
+        if (z - 1 > 0) _result[2] = ExtractHeight(colorArray[x, z - 1]); //Bottom
+        if (x - 1 > 0) _result[3] = ExtractHeight(colorArray[x - 1, z]); //Left
+    }
+    float ExtractHeight(Color _color)
+    {
+        return (float)System.Math.Ceiling((1f - _color.b) * 25);
+    }
+    void AddUvs(float _xAtlasCellCoord, float _yAtlasCellCoord)
+    {
+        float _offset = +0.01f; //If UVs are right between 2 "tiles" on the atlas it can sample neighboring pixels, so let's offset them to the center
+        float _cellSize = (1f / _atlasGriddSize);
+        float _startX = (_cellSize * _xAtlasCellCoord);
+        float _startY = _cellSize * _yAtlasCellCoord;
+        _uvs.Add(new Vector2(_startX + _offset, _startY + _offset));
+        _uvs.Add(new Vector2(_startX + _cellSize - _offset, _startY + _offset));
+        _uvs.Add(new Vector2(_startX + _offset, _startY + _cellSize - _offset));
+        _uvs.Add(new Vector2(_startX + _cellSize - _offset, _startY + _cellSize - _offset));
+    }
 
     ProBuilderMesh CreatePBCube(int x, int z, float height)
     {
@@ -247,7 +260,6 @@ public class LevelGenAlt : MonoBehaviour
 
         return m_Mesh;
     }
-
     GameObject CreateSpecialObject(int x, int z, float y, GameObject prefab)
     {
         //instantiate

@@ -15,3 +15,5 @@ MonoBehaviour:
   dataList:
   - entryId: 0
     entryPrefab: {fileID: 1163873478676698679, guid: a56caca26f7de814990f433987cf34cb, type: 3}
+  - entryId: 1
+    entryPrefab: {fileID: 1163873478676698679, guid: a56caca26f7de814990f433987cf34cb, type: 3}
