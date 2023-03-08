@@ -36,6 +36,7 @@ public class PlayerController : MonoBehaviour
 
     //Bodies
     private Rigidbody body, connectedBody, previousConnectedBody;
+    public bool OnConnectedBody => connectedBody;
     Vector3 connectionWorldPosition, connectionLocalPosition; //An object animated by kinematics has no real velocity, so we figure out what it *should* be by keeping track of how much it's moved. We also keep track of where we're connected relative to the origin, so if we're on a rotating platform, we can orbit around the platform's origin. 
 
     //Movement from inputs
@@ -58,8 +59,9 @@ public class PlayerController : MonoBehaviour
 
     //Ground detection and slopes
     int groundContactCount, steepContactCount;
-    bool OnGround => groundContactCount > 0; //shorthand way to define a single-statement readonly property. It's the same as: bool OnGround { get { return groundContactCount > 0; } }
-    bool OnSteep => steepContactCount > 0;
+    public bool OnGround => groundContactCount > 0; //shorthand way to define a single-statement readonly property. It's the same as: bool OnGround { get { return groundContactCount > 0; } }
+    //Public because DecalShadow needs it
+    public bool OnSteep => steepContactCount > 0;
     int stepsSinceLastGrounded, stepsSinceLastJump;
     [SerializeField, Range(0f, 90f)]
     float maxGroundAngle = 25f, maxStairsAngle = 50f;
@@ -71,7 +73,6 @@ public class PlayerController : MonoBehaviour
     float maxSnapSpeed = 100f; //Max speed at which we'll snap to slopes instead of flying off. "Note that setting both max speeds to the same value can produce inconsistent results due to precision limitations. It's better to make the max snap speed a bit higher or lower than the max speed."
     [SerializeField, Min(0f)]
     float probeDistance = 2.5f; //How far down we check for ground to snap down to, instead of flying off. Our little knight's center is 2 units off the floor, so check 0.5 units below its feet. "If too low, snapping can fail at steep angles or high velocities, while too high can lead to nonsensical snapping to ground far below."
-
 
     void Awake()
     {
@@ -126,10 +127,9 @@ public class PlayerController : MonoBehaviour
         if (desiredJump && debugging) Debug.Log("Jump desired!");
         if (desiredJumpRelease && debugging) Debug.Log("Jump release desired!");
 
-        if (controls.Player.Menu.WasReleasedThisFrame()) //Hacky restart, for now
+        if (controls.Player.Menu.WasReleasedThisFrame()) //Pause Menu
         {
             GameManager.i.TogglePause();
-            //SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         } 
     }
     void FixedUpdate()
@@ -187,6 +187,7 @@ public class PlayerController : MonoBehaviour
         velocity += jumpDirection * jumpSpeed;
 
         stepsSinceLastJump = 0;
+        unityAnimator.SetTrigger("Jump");
     }
     void JumpRelease()
     {
@@ -263,6 +264,7 @@ public class PlayerController : MonoBehaviour
 
         if (OnGround || SnapToGround() || CheckSteepContacts()) //SnapToGround will only get invoked when OnGround is false. Pretty cool.
         {
+            if (stepsSinceLastGrounded > 1) DoLandingStuff();
             stepsSinceLastGrounded = 0;
             if (groundContactCount > 1) //"only bothering to normalize the contact normal if it's an aggregate, as it's already unit-length otherwise."
             {
@@ -414,13 +416,39 @@ public class PlayerController : MonoBehaviour
 
     void UpdateAnimation()
     {
+        //unityAnimator.ResetTrigger("Fall");
+        //unityAnimator.ResetTrigger("Land");
+
+        //Si déplacement vecteur Z négatif etc passer un booléen?
+        //Debug.Log("udpating animation! speed is: " + relativeVelocity.magnitude);
+        Vector2 getAnimSpeed; //Don't take vertical (Y) velocity into account
+        getAnimSpeed.x = relativeVelocity.x; //Use velocity related to connected body, not absolute, otherwise a platform moving down would trigger the falling animation
+        getAnimSpeed.y = relativeVelocity.z;
+        unityAnimator.SetFloat("speed", getAnimSpeed.magnitude);
+        //unityAnimator.ResetTrigger("Jump");
         if (OnGround || OnSteep)
         {
-            //Si déplacement vecteur Z négatif etc passer un booléen?
-            //Debug.Log("udpating animation! speed is: " + relativeVelocity.magnitude);
-            unityAnimator.SetFloat("speed", relativeVelocity.magnitude);
+
         }
-        else unityAnimator.SetFloat("speed", 6);
+        else
+        {
+            unityAnimator.ResetTrigger("Land");
+            if (velocity.y < 0) //Descending
+            {
+                unityAnimator.SetTrigger("Fall");
+                unityAnimator.ResetTrigger("Jump");
+                Debug.Log("Falling!");
+            }
+        }
+    }
+
+    void DoLandingStuff() //Used when player hits the ground
+    {
+        unityAnimator.ResetTrigger("Jump");
+        unityAnimator.ResetTrigger("Fall");
+        unityAnimator.SetTrigger("Land");
+
+        Debug.Log("Just landed!");
     }
 
     void FaceVelocityDirection()

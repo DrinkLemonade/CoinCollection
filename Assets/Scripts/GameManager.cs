@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -14,6 +15,9 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     int sessionCoinPointPool = 100; //How many points can be collected by getting all the coins
 
+    [SerializeField]
+    GameObject pausePanel;
+
     [NonSerialized] //I knew that had to exist
     public bool gameIsPaused = false;
 
@@ -21,6 +25,7 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         NewGame();
+        pausePanel.SetActive(false); //May need to remove this if I want to keep the pause panel disabled by default.
     }
 
     // Update is called once per frame
@@ -42,6 +47,12 @@ public class GameManager : MonoBehaviour
         GUI.i.UpdateDisplay(i.currentSession);
     }
 
+    public void RestartGame()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        pausePanel.SetActive(false);
+    }
+
     public void TogglePause()
     {
         gameIsPaused = !gameIsPaused; //Toggle
@@ -49,11 +60,13 @@ public class GameManager : MonoBehaviour
         {
             Time.timeScale = 0;
             //Make menus appear and stuff
+            pausePanel.SetActive(true);
         }
         else
         {
             Time.timeScale = 1;
             //Make menus disappear
+            pausePanel.SetActive(false);
         }
     }
 }

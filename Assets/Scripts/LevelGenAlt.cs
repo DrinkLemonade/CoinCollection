@@ -10,6 +10,9 @@ using UnityEditor.UIElements;
 
 public class LevelGenAlt : MonoBehaviour
 {
+    [SerializeField]
+    PropsBuilder builder;
+
     public Texture2D mapTexture;
 
     Color c_coinGold = new Color32(255,201,14,255);
@@ -79,6 +82,8 @@ public class LevelGenAlt : MonoBehaviour
         colorArray = Texture2DTo2DColorArray(mapTexture);
         GenerateFloor(colorArray);
         levelMeshFilter.sharedMesh = levelMesh;
+
+        builder.CreateAllProps();
     }
 
 
@@ -120,30 +125,6 @@ public class LevelGenAlt : MonoBehaviour
                 float height = ExtractHeight(colorArray[i, j]);  //Use blue component. Black (wall, 25) to whiteish (1, lowest floor)
                 if (height > 0) CreateCube(i, j, height);
 
-                /*if (col == c_nothing)
-                {
-                    continue; //don't create anything
-                }
-                else
-                {
-                    float height = (float)System.Math.Ceiling((1f - colorArray[i, j].b) * 25); //Use blue component. Black (wall, 25) to whiteish (1, lowest floor)
-
-                    GameObject prefab;
-                    if (col == c_coinGold) prefab = pf_goldCoinPrefab;
-                    else if (col == c_coinSilver) prefab = pf_silverCoinPrefab;
-                    else if (col == c_coinCopper) prefab = pf_copperCoinPrefab;
-                    else if (col == c_torch) prefab = pf_torchPrefab;
-                    else
-                    {
-                        //CreatePBCube(i, j, height);
-                        continue;
-                    }
-                    //Debug.Log("Cube and torch");
-                    float altHeight = (float)System.Math.Ceiling((1f - colorArray[i-1, j].b) * 25); //create block, same height as block to the left
-
-                    //CreateSpecialObject(i, j, altHeight + 0.7f, prefab);
-                    continue;
-                }*/
             }
         }
         levelMesh.SetVertices(_vertices);
@@ -154,6 +135,8 @@ public class LevelGenAlt : MonoBehaviour
 
         levelMeshCollider.sharedMesh = levelMesh;
     }
+
+   
 
     void CreateCube(int x, int z, float height)
     {
