@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.VirtualTexturing;
 using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
@@ -16,23 +17,39 @@ public class GameManager : MonoBehaviour
     int sessionCoinPointPool = 100; //How many points can be collected by getting all the coins
 
     [SerializeField]
-    GameObject pausePanel;
+    GameObject pausePanel, gameOverPanel;
 
     [NonSerialized] //I knew that had to exist
     public bool gameIsPaused = false;
+    bool gameIsOver = false;
+
+    [SerializeField]
+    bool debugMode = false;
 
     // Start is called before the first frame update
     void Start()
     {
-        NewGame();
+        NewSession();
         pausePanel.SetActive(false); //May need to remove this if I want to keep the pause panel disabled by default.
+        gameOverPanel.SetActive(false);
     }
 
     // Update is called once per frame
     void Update()
     {
-        i.currentSession.currentSecondsLeft -= Time.deltaTime;
-        if (i.currentSession.currentSecondsLeft <= 0) i.currentSession.currentSecondsLeft = 0;
+        if (!gameIsOver)
+        {
+            if (i.currentSession.currentSecondsLeft > 0)
+            {
+                i.currentSession.currentSecondsLeft -= Time.deltaTime;
+            }
+            else
+            {
+                i.currentSession.currentSecondsLeft = 0;
+                Debug.Log("Time's up!");
+                if (!debugMode) TriggerGameOver();
+            }
+        }
     }
 
     private void Awake()
@@ -40,22 +57,37 @@ public class GameManager : MonoBehaviour
         i = this;
     }
 
-    static void NewGame()
+    static void NewSession()
     {
         Debug.Log("------Starting a game...------");
         i.currentSession = new GameSession(i, i.sessionStartSeconds);
         GUI.i.UpdateDisplay(i.currentSession);
     }
 
-    public void RestartGame()
+    public void RestartSession()
     {
+        Time.timeScale = 1;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         pausePanel.SetActive(false);
+        gameOverPanel.SetActive(false);
+    }
+
+    public void TriggerGameOver()
+    {
+        gameIsOver = true;
+        gameOverPanel.SetActive(true);
+        Time.timeScale = 0;
+    }
+
+    public void QuitToMenu()
+    {
+        //Do nothing for now
     }
 
     public void TogglePause()
     {
         gameIsPaused = !gameIsPaused; //Toggle
+        if (gameIsOver) gameIsPaused = false; //Don't allow displaying the pause menu during game over
         if (gameIsPaused)
         {
             Time.timeScale = 0;

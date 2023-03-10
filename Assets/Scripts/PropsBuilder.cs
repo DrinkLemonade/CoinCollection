@@ -32,6 +32,7 @@ public class PropsBuilder : MonoBehaviour
     void CreateProp(Color color, int x, int z, int height)
     {
         GameObject prefab = db.GetPrefabFromId(color);
+        Debug.Log("DATABASE: " + db);
         if (prefab == null)
         {
             Debug.Log("Null prefab with ID " + color);

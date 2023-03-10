@@ -16,7 +16,7 @@ MonoBehaviour:
   - entryColor: {r: 1, g: 0, b: 0, a: 0}
     entryPrefab: {fileID: 1163873478676698679, guid: a56caca26f7de814990f433987cf34cb, type: 3}
     verticalAdjust: -1.5
-  - entryColor: {r: 1, g: 0.7882353, b: 0.05490196, a: 0}
+  - entryColor: {r: 1, g: 1, b: 0, a: 0}
     entryPrefab: {fileID: 5146777619902727873, guid: 618284e6e783df446a2052a24014c757, type: 3}
     verticalAdjust: -1.5
   - entryColor: {r: 0.6, g: 0.8509804, b: 0.91764706, a: 0}

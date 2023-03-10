@@ -58,7 +58,7 @@ public class LevelGenAlt : MonoBehaviour
     [SerializeField]
     MeshCollider levelMeshCollider;
 
-    int _atlasGriddSize = 8;
+    int _atlasGriddSize = 8; //8x8
 
     //Cache an array we use repeatedly
     Vector3[] vertexArray = new Vector3[]

@@ -28,7 +28,7 @@ public class PropDatabase : ScriptableObject
     public GameObject GetPrefabFromId(Color id)
     {
         DatabaseEntry ret;
-        Debug.Log("dict: " + dictionary + "color: " + id);
+        Debug.Log("dict count: " + dictionary.Count + "color: " + id);
         dictionary.TryGetValue(id, out ret);
         return ret.entryPrefab;
     }

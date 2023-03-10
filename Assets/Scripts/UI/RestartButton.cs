@@ -7,6 +7,6 @@ public class RestartButton : MonoBehaviour
 {
     public void ClickRestart()
     {
-        GameManager.i.RestartGame();
+        GameManager.i.RestartSession();
     }
 }
