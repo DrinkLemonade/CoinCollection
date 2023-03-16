@@ -20,4 +20,10 @@ public class GameSession
     {
         playerScore += points;    
     }
+
+    public void AddTime(float seconds)
+    {
+        currentSecondsLeft += seconds;
+        if (currentSecondsLeft > startSecondsLeft) currentSecondsLeft = startSecondsLeft;
+    }
 }

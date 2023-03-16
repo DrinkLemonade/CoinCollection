@@ -152,7 +152,7 @@ public class LevelGenAlt : MonoBehaviour
         _vertices.Add(new Vector3(x - (tileSize / 2), height, z + (tileSize / 2)));
         _vertices.Add(new Vector3(x - (tileSize / 2), height, z - (tileSize / 2)));
 
-        AddUvs(3, 6); //Add green on the atlas. Lower left is 0,0, the texture is 8x8 
+        AddUvs(1, 7); //Add green on the atlas. Lower left is 0,0, the texture is 8x8 
         //An atlas goes from 0 to 1, it's normalized. Each step is 0.125, so 1/8
 
         //i ==0 bottom  (from top view)
@@ -190,7 +190,7 @@ public class LevelGenAlt : MonoBehaviour
                 _vertices.Add(m.MultiplyPoint3x4(vertexArray[j]) + new Vector3(x, 0, z)); //Rotation + Offset in the world
             }
 
-            AddUvs(7, 7); //Coordinates on the texture atlas.
+            AddUvs(0, 7); //Coordinates on the texture atlas.
         }
 
         //Triangles creation

@@ -437,7 +437,7 @@ public class PlayerController : MonoBehaviour
             {
                 unityAnimator.SetTrigger("Fall");
                 unityAnimator.ResetTrigger("Jump");
-                Debug.Log("Falling!");
+                //Debug.Log("Falling!");
             }
         }
     }

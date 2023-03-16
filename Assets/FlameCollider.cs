@@ -2,16 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CoinCylinder : MonoBehaviour
+public class FlameCollider : MonoBehaviour
 {
     [SerializeField]
-    Coin coinController;
+    TimePickupFlame flameController;
     void OnTriggerEnter(Collider other)
     {
-        Debug.Log("entered");
         if (other.CompareTag("Player"))
         {
-            coinController.CoinCollected();
+            flameController.FlameCollected();
         }
     }
 }

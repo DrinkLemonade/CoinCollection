@@ -46,7 +46,6 @@ public class GameManager : MonoBehaviour
             else
             {
                 i.currentSession.currentSecondsLeft = 0;
-                Debug.Log("Time's up!");
                 if (!debugMode) TriggerGameOver();
             }
         }
@@ -74,6 +73,7 @@ public class GameManager : MonoBehaviour
 
     public void TriggerGameOver()
     {
+        Debug.Log("-----GAME OVER-----");
         gameIsOver = true;
         gameOverPanel.SetActive(true);
         Time.timeScale = 0;

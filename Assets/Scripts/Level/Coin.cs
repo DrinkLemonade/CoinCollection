@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using static Unity.VisualScripting.Member;
 
 public class Coin : MonoBehaviour
 {
@@ -18,7 +19,10 @@ public class Coin : MonoBehaviour
     ParticleSystem myParticleSystem;
     [SerializeField]
     Color myParticleColor;
-    // Start is called before the first frame update
+
+    [SerializeField]
+    AudioClip myAudioClip;
+
     void Start()
     {
         var col = myParticleSystem.colorOverLifetime;
@@ -28,6 +32,14 @@ public class Coin : MonoBehaviour
         grad.SetKeys(new GradientColorKey[] { new GradientColorKey(myParticleColor, 0.0f), new GradientColorKey(myParticleColor, 1.0f) }, new GradientAlphaKey[] { new GradientAlphaKey(1.0f, 0.0f), new GradientAlphaKey(0.0f, 1.0f) });
 
         col.color = grad;
+    }
+
+    public void CoinCollected()
+    {
+        GameManager.i.currentSession.AddScore(pointsWorth);
+        //myAudioSource.PlayOneShot(myAudioSource.clip);
+        SoundPlayer.i.source.PlayOneShot(myAudioClip);
+        Destroy(gameObject);//.transform.parent.parent.gameObject); //This is SO stupid.
     }
 
     // Update is called once per frame
