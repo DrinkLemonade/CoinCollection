@@ -24,6 +24,13 @@ public class PropsBuilder : MonoBehaviour
                 if (col == Color.black) continue;
                 col.a = 0f;
                 if (col == Color.clear) continue; //Not to be confused with black, since we're turning black to transparent
+                Debug.Log("COLOR AT POS " + x + "," + y + " : R<" + col.r + ">, G<" + col.g + ">, B<" + col.b + ">");
+
+                /*Bruteforce fix. TODO: Fix this
+                if (col.r > 0 && col.r < 1) col.r = 0.4f;
+                if (col.g > 0 && col.g < 1) col.g = 0.4f;
+                if (col.b > 0 && col.b < 1) col.b = 0.4f;*/
+
                 CreateProp(col, x, y, 25);
             }
         }

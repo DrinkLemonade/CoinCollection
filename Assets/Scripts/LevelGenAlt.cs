@@ -15,13 +15,6 @@ public class LevelGenAlt : MonoBehaviour
 
     public Texture2D mapTexture;
 
-    Color c_coinGold = new Color32(255,201,14,255);
-    Color c_coinSilver = new Color32(153, 217, 234, 255);
-    Color c_coinCopper = new Color32(185, 122, 87, 255);
-    Color c_coinPinata = new Color32(34, 177, 76, 255);
-    Color c_torch = Color.red;
-    Color c_nothing = Color.white;
-
     [NonSerialized]
     public GameObject myCube; //instance created each loop
     //public GameObject CubePrefab; //prefab
@@ -35,16 +28,9 @@ public class LevelGenAlt : MonoBehaviour
     private const float tileSize = 1f; //in units
 
     [SerializeField]
-    GameObject pf_torchPrefab; //prefab
+    float lavaHeight = 4f;
     [SerializeField]
-    GameObject pf_copperCoinPrefab;
-    [SerializeField]
-    GameObject pf_silverCoinPrefab;
-    [SerializeField]
-    GameObject pf_goldCoinPrefab;
-    [SerializeField]
-    GameObject pf_coinPinataPrefab;
-
+    GameObject lavaPrefab;
 
     List<Vector3> _vertices = new List<Vector3>();
     List<int> _tris = new List<int>();
@@ -122,8 +108,15 @@ public class LevelGenAlt : MonoBehaviour
             //Debug.Log("New row");
             for (int j = 0; j < len; j++)
             {
-                float height = ExtractHeight(colorArray[i, j]);  //Use blue component. Black (wall, 25) to whiteish (1, lowest floor)
-                if (height > 0) CreateCube(i, j, height);
+                if (colorArray[i, j] == Color.red)
+                {
+                    CreateSpecialObject(i, j, lavaHeight, lavaPrefab);
+                }
+                else
+                {
+                    float height = ExtractHeight(colorArray[i, j]);  //Use blue component. Black (wall, 25) to whiteish (1, lowest floor)
+                    if (height > 0) CreateCube(i, j, height);
+                }
 
             }
         }
@@ -136,11 +129,12 @@ public class LevelGenAlt : MonoBehaviour
         levelMeshCollider.sharedMesh = levelMesh;
     }
 
-   
-
     void CreateCube(int x, int z, float height)
     {
-        int _vertsCount = _vertices.Count; //Added
+        bool createLava = false; //Unused
+        int _vertsCount = _vertices.Count;
+
+        if (createLava) height = lavaHeight;
 
         //The way we do it with UVs allows us up to 64 textures but no blending between. We can use this for emissive or reflective surfaces via shader
         //We could use vertexcolor (1 solid color, soft blending)
@@ -152,7 +146,11 @@ public class LevelGenAlt : MonoBehaviour
         _vertices.Add(new Vector3(x - (tileSize / 2), height, z + (tileSize / 2)));
         _vertices.Add(new Vector3(x - (tileSize / 2), height, z - (tileSize / 2)));
 
-        AddUvs(1, 7); //Add green on the atlas. Lower left is 0,0, the texture is 8x8 
+        if (createLava)
+        {
+            AddUvs(3, 7);
+        }
+        else AddUvs(1, 7); //Add green on the atlas. Lower left is 0,0, the texture is 8x8 
         //An atlas goes from 0 to 1, it's normalized. Each step is 0.125, so 1/8
 
         //i ==0 bottom  (from top view)
@@ -167,6 +165,8 @@ public class LevelGenAlt : MonoBehaviour
         //Side faces creation
         for (int i = 0; i < 4; i++)
         {
+            //if (createLava) break; //Exit the loop, we only need the top face for lava
+
             float _neighbourHeight = _neighbourInfos[i];
             if (height == _neighbourHeight) continue; //Don't create face if adjacent to another
             if (height < _neighbourHeight) continue;

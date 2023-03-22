@@ -15,22 +15,28 @@ MonoBehaviour:
   dataList:
   - entryColor: {r: 1, g: 0, b: 0, a: 0}
     entryPrefab: {fileID: 1163873478676698679, guid: a56caca26f7de814990f433987cf34cb, type: 3}
-    verticalAdjust: -1.5
+    verticalAdjust: 0.7
   - entryColor: {r: 1, g: 1, b: 0, a: 0}
     entryPrefab: {fileID: 5146777619902727873, guid: 618284e6e783df446a2052a24014c757, type: 3}
-    verticalAdjust: -1.5
-  - entryColor: {r: 0.6, g: 0.8509804, b: 0.91764706, a: 0}
+    verticalAdjust: 0.7
+  - entryColor: {r: 0, g: 1, b: 1, a: 0}
     entryPrefab: {fileID: 5146777619902727873, guid: 0395b6f0753bc344ca6a019b859c74c0, type: 3}
-    verticalAdjust: -1.5
-  - entryColor: {r: 0.7254902, g: 0.47843137, b: 0.34117648, a: 0}
+    verticalAdjust: 0.7
+  - entryColor: {r: 0.4, g: 0, b: 0, a: 0}
     entryPrefab: {fileID: 5146777619902727873, guid: 919e5f5793ac77a4799dcdbddfb8d50b, type: 3}
-    verticalAdjust: -1.5
-  - entryColor: {r: 0.53333336, g: 0, b: 0.08235294, a: 0}
+    verticalAdjust: 0.7
+  - entryColor: {r: 0, g: 0, b: 1, a: 0}
     entryPrefab: {fileID: 510241190754469332, guid: dac122a58d8a3854a8bd1779e2814b1d, type: 3}
-    verticalAdjust: -1.5
-  - entryColor: {r: 0.24705882, g: 0.28235295, b: 0.8, a: 0}
+    verticalAdjust: -7
+  - entryColor: {r: 0, g: 1, b: 0, a: 0}
     entryPrefab: {fileID: 510241190754469332, guid: fc1b9351889763f4da6bad5c401df62f, type: 3}
-    verticalAdjust: -1.5
-  - entryColor: {r: 0.6392157, g: 0.28627452, b: 0.6431373, a: 0}
+    verticalAdjust: -7
+  - entryColor: {r: 1, g: 0, b: 1, a: 0}
     entryPrefab: {fileID: 510241190754469332, guid: 6ad9fd62502994549b41c6f6fcf622b6, type: 3}
-    verticalAdjust: -1.5
+    verticalAdjust: -7
+  - entryColor: {r: 0, g: 0.4, b: 0.4, a: 0}
+    entryPrefab: {fileID: 1163873478676698679, guid: 4ba135632230a53438874e86492f01db, type: 3}
+    verticalAdjust: 0.7
+  - entryColor: {r: 0.4, g: 0.4, b: 0, a: 0}
+    entryPrefab: {fileID: 6066692892672593913, guid: f74733ec5392e5e4ca9d4c13b43efdd4, type: 3}
+    verticalAdjust: 0.7

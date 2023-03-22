@@ -18,6 +18,8 @@ public class Coin : MonoBehaviour
     [SerializeField]
     ParticleSystem myParticleSystem;
     [SerializeField]
+    Light myLight;
+    [SerializeField]
     Color myParticleColor;
 
     [SerializeField]
@@ -32,6 +34,8 @@ public class Coin : MonoBehaviour
         grad.SetKeys(new GradientColorKey[] { new GradientColorKey(myParticleColor, 0.0f), new GradientColorKey(myParticleColor, 1.0f) }, new GradientAlphaKey[] { new GradientAlphaKey(1.0f, 0.0f), new GradientAlphaKey(0.0f, 1.0f) });
 
         col.color = grad;
+
+        myLight.color = myParticleColor;
     }
 
     public void CoinCollected()
