@@ -112,15 +112,10 @@ public class LevelGenerator : MonoBehaviour
             //Debug.Log("New row");
             for (int j = 0; j < len; j++)
             {
-                if (colorArray[i, j] == Color.red)
-                {
-                    CreateSpecialObject(i, j, lavaHeight, lavaPrefab);
-                }
-                else
-                {
-                    float height = ExtractHeight(colorArray[i, j]);  //Use blue component. Black (wall, 25) to whiteish (1, lowest floor)
-                    if (height > 0) CreateCube(i, j, height);
-                }
+                float height = ExtractHeight(colorArray[i, j]);  //Use blue component. Black (wall, 25) to whiteish (1, lowest floor)
+                if (height > 0) CreateCube(i, j, height);
+                else CreateSpecialObject(i, j, height, lavaPrefab);
+
             }
         }
         levelMesh.SetVertices(_vertices);
