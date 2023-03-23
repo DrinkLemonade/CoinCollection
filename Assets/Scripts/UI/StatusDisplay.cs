@@ -31,7 +31,8 @@ public class StatusDisplay : MonoBehaviour
         m = m.PadLeft(2, '0');
         ms = ms.PadLeft(2, '0');
 
-        string text = "SCORE: " + sess.playerScore.ToString().PadLeft(7, '0') + "\nTIME: " + m + ":" + s + ":" + ms;
+        int scoreDisplayed = sess.playerScore;
+        string text = "    x " + scoreDisplayed.ToString().PadLeft(7, '0') + "\nTIME: " + m + ":" + s + ":" + ms;
         display.SetText(text);
     }
 }

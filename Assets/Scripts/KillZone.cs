@@ -6,7 +6,7 @@ public class KillZone : MonoBehaviour
 {
     void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Killzone entered!");
+        //TODO: Find why stuff keeps entering killzones. Other killzones?
         if (other.CompareTag("Player"))
         {
             GameManager.i.TriggerGameOver();

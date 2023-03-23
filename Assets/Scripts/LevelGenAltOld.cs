@@ -7,20 +7,13 @@ using UnityEngine.ProBuilder.MeshOperations;
 using Unity.VisualScripting;
 using System;
 using UnityEditor.UIElements;
-
+/*
 public class LevelGenAlt : MonoBehaviour
 {
     [SerializeField]
     PropsBuilder builder;
 
     public Texture2D mapTexture;
-
-    Color c_coinGold = new Color32(255, 201, 14, 255);
-    Color c_coinSilver = new Color32(153, 217, 234, 255);
-    Color c_coinCopper = new Color32(185, 122, 87, 255);
-    Color c_coinPinata = new Color32(34, 177, 76, 255);
-    Color c_torch = Color.red;
-    Color c_nothing = Color.white;
 
     [NonSerialized]
     public GameObject myCube; //instance created each loop
@@ -35,16 +28,9 @@ public class LevelGenAlt : MonoBehaviour
     private const float tileSize = 1f; //in units
 
     [SerializeField]
-    GameObject pf_torchPrefab; //prefab
+    float lavaHeight = 4f;
     [SerializeField]
-    GameObject pf_copperCoinPrefab;
-    [SerializeField]
-    GameObject pf_silverCoinPrefab;
-    [SerializeField]
-    GameObject pf_goldCoinPrefab;
-    [SerializeField]
-    GameObject pf_coinPinataPrefab;
-
+    GameObject lavaPrefab;
 
     List<Vector3> _vertices = new List<Vector3>();
     List<int> _tris = new List<int>();
@@ -122,13 +108,20 @@ public class LevelGenAlt : MonoBehaviour
             //Debug.Log("New row");
             for (int j = 0; j < len; j++)
             {
-                float height = ExtractHeight(colorArray[i, j]);  //Use blue component. Black (wall, 25) to whiteish (1, lowest floor)
-                if (height > 0) CreateCube(i, j, height);
+                if (colorArray[i, j] == Color.red)
+                {
+                    CreateSpecialObject(i, j, lavaHeight, lavaPrefab);
+                }
+                else
+                {
+                    float height = ExtractHeight(colorArray[i, j]);  //Use blue component. Black (wall, 25) to whiteish (1, lowest floor)
+                    if (height > 0) CreateCube(i, j, height);
+                }
 
             }
         }
         levelMesh.SetVertices(_vertices);
-        levelMesh.SetTriangles(_tris, 0);
+        levelMesh.SetTriangles(_tris,0);
         levelMesh.SetUVs(0, _uvs); //Added
         levelMesh.RecalculateNormals(); //Added
         Debug.Log(_tris.Count);
@@ -136,10 +129,12 @@ public class LevelGenAlt : MonoBehaviour
         levelMeshCollider.sharedMesh = levelMesh;
     }
 
-
     void CreateCube(int x, int z, float height)
     {
-        int _vertsCount = _vertices.Count; //Added
+        bool createLava = false; //Unused
+        int _vertsCount = _vertices.Count;
+
+        if (createLava) height = lavaHeight;
 
         //The way we do it with UVs allows us up to 64 textures but no blending between. We can use this for emissive or reflective surfaces via shader
         //We could use vertexcolor (1 solid color, soft blending)
@@ -151,9 +146,12 @@ public class LevelGenAlt : MonoBehaviour
         _vertices.Add(new Vector3(x - (tileSize / 2), height, z + (tileSize / 2)));
         _vertices.Add(new Vector3(x - (tileSize / 2), height, z - (tileSize / 2)));
 
-        AddUvs(GetGroundTileTexture(height)); //Add green on the atlas. Lower left is 0,0, the texture is 8x8 
-                                              //An atlas goes from 0 to 1, it's normalized. Each step is 0.125, so 1/8
-
+        if (createLava)
+        {
+            AddUvs(3, 7);
+        }
+        else AddUvs(1, 7); //Add green on the atlas. Lower left is 0,0, the texture is 8x8 
+        //An atlas goes from 0 to 1, it's normalized. Each step is 0.125, so 1/8
 
         //i ==0 bottom  (from top view)
         //i ==1 left (from top view)
@@ -167,40 +165,32 @@ public class LevelGenAlt : MonoBehaviour
         //Side faces creation
         for (int i = 0; i < 4; i++)
         {
+            //if (createLava) break; //Exit the loop, we only need the top face for lava
+
             float _neighbourHeight = _neighbourInfos[i];
             if (height == _neighbourHeight) continue; //Don't create face if adjacent to another
             if (height < _neighbourHeight) continue;
 
-            int _sideFaceSubdivCount = Mathf.Abs(Mathf.RoundToInt(height - _neighbourHeight));
+            //Adapt the height of the side acoording its neighbour
+            vertexArray[1].y = height;
+            vertexArray[3].y = height;
 
-            for (int j = 0; j < _sideFaceSubdivCount; j++)
+            vertexArray[0].y = _neighbourHeight;
+            vertexArray[2].y = _neighbourHeight;
+
+
+            Quaternion rotation = Quaternion.Euler(new Vector3(0, i * 90, 0));
+            Matrix4x4 m = Matrix4x4.Rotate(rotation);
+
+            _createdFaceCount++;
+
+            //Rotate face vertices
+            for (int j = 0; j < vertexArray.Length; j++)
             {
-                //Adapt the height of the side acoording its neighbour
-                vertexArray[1].y = height - j;
-                vertexArray[3].y = height - j;
-
-                vertexArray[0].y = height - (j + 1);
-                vertexArray[2].y = height - (j + 1);
-
-
-                Quaternion rotation = Quaternion.Euler(new Vector3(0, i * 90, 0));
-                Matrix4x4 m = Matrix4x4.Rotate(rotation);
-
-                _createdFaceCount++;
-
-                //Rotate face vertices
-                for (int k = 0; k < vertexArray.Length; k++)
-                {
-                    _vertices.Add(m.MultiplyPoint3x4(vertexArray[k]) + new Vector3(x, 0, z)); //Rotation + Offset in the world
-                }
-
-                int _rand = UnityEngine.Random.Range(0,8);
-                int u = (j == 0 || j == _sideFaceSubdivCount - 1) ? 3 : 2;
-                int v = (j == 0 || j == _sideFaceSubdivCount - 1) ? 7 : _rand;
-                AddUvs(u, v); //Coordinates on the texture atlas.
+                _vertices.Add(m.MultiplyPoint3x4(vertexArray[j]) + new Vector3(x, 0, z)); //Rotation + Offset in the world
             }
 
-
+            AddUvs(0, 7); //Coordinates on the texture atlas.
         }
 
         //Triangles creation
@@ -211,31 +201,6 @@ public class LevelGenAlt : MonoBehaviour
                 _tris.Add(_vertsCount + trisOrder[j] + (i * 4));
             }
         }
-    }
-
-    Vector2Int GetGroundTileTexture(float _tileHeight)
-    {
-        bool _wallBase = false;
-
-        int _neighbourCount = 0;
-
-        //Side faces creation
-        for (int i = 0; i < 4; i++)
-        {
-            float _neighbourHeight = _neighbourInfos[i];
-            if (_neighbourHeight > 0) _neighbourCount++;
-            if (_tileHeight >= _neighbourHeight) continue; //Don't create face if adjacent to another
-
-            _wallBase = true;
-            break;
-        }
-
-        if (_wallBase) return new Vector2Int(2, 6);
-        if (_neighbourCount != 4) return new Vector2Int(2, 7);
-
-        int v = UnityEngine.Random.Range(4, 8);
-        return new Vector2Int(1, v);
-
     }
 
     void GetNeigbours(int x, int z, float[] _result)
@@ -255,18 +220,6 @@ public class LevelGenAlt : MonoBehaviour
         float _cellSize = (1f / _atlasGriddSize);
         float _startX = (_cellSize * _xAtlasCellCoord);
         float _startY = _cellSize * _yAtlasCellCoord;
-        _uvs.Add(new Vector2(_startX + _offset, _startY + _offset));
-        _uvs.Add(new Vector2(_startX + _cellSize - _offset, _startY + _offset));
-        _uvs.Add(new Vector2(_startX + _offset, _startY + _cellSize - _offset));
-        _uvs.Add(new Vector2(_startX + _cellSize - _offset, _startY + _cellSize - _offset));
-    }
-
-    void AddUvs(Vector2Int _atlasCoord)
-    {
-        float _offset = +0.01f; //If UVs are right between 2 "tiles" on the atlas it can sample neighboring pixels, so let's offset them to the center
-        float _cellSize = (1f / _atlasGriddSize);
-        float _startX = (_cellSize * _atlasCoord.x);
-        float _startY = _cellSize * _atlasCoord.y;
         _uvs.Add(new Vector2(_startX + _offset, _startY + _offset));
         _uvs.Add(new Vector2(_startX + _cellSize - _offset, _startY + _offset));
         _uvs.Add(new Vector2(_startX + _offset, _startY + _cellSize - _offset));
@@ -299,3 +252,4 @@ public class LevelGenAlt : MonoBehaviour
         return prefabInstance;
     }
 }
+*/
