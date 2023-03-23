@@ -7,9 +7,14 @@ using UnityEngine.UIElements;
 public class LightManager : MonoBehaviour
 {
     [SerializeField]
-    float intensity = 0;
+    float intensity = 5;
     [SerializeField]
     float maxIntensity = 20;
+
+    [SerializeField]
+    float flameLightRange = 0;
+    [SerializeField]
+    float flameLightRangeMax = 20;
 
     [SerializeField]
     bool affectAmbientLight = true;
@@ -40,6 +45,10 @@ public class LightManager : MonoBehaviour
         float secsMax = GameManager.i.currentSession.startSecondsLeft;
         float secsElapsed = secsMax - secsLeft;
         intensity = (secsElapsed * maxIntensity) / secsMax;
+
+        //Exponential at the end
+        if (secsLeft < 10) intensity *= ((10-secsLeft)*10);
+
         if (affectPlayerLight)
         {
             playerLight.intensity = intensity;
@@ -56,6 +65,9 @@ public class LightManager : MonoBehaviour
         float flameIncrease = (secsElapsed * (flameMaxScale - flameMinScale)) / secsMax;
         float flameScale = flameMinScale + flameIncrease;
         playerFlameTransform.localScale = new Vector3(flameScale, flameScale, flameScale);
+
+        float playerLightRange = (secsElapsed * (flameLightRangeMax - flameLightRange)) / secsMax;
+        playerLight.range = playerLightRange;
     }
 
     void SetAllLightsEnabledStatus(bool choice)

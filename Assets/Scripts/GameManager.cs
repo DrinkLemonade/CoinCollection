@@ -15,6 +15,7 @@ public class GameManager : MonoBehaviour
     int sessionStartSeconds = 90; //Currently acts as the max, too
     [SerializeField]
     int sessionCoinPointPool = 100; //How many points can be collected by getting all the coins
+    public int sessionCoinsForVictory = 100; //Used by status display
 
     [SerializeField]
     GameObject pausePanel, gameOverPanel;
@@ -60,7 +61,6 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("------Starting a game...------");
         i.currentSession = new GameSession(i, i.sessionStartSeconds);
-        GUI.i.UpdateDisplay(i.currentSession);
     }
 
     public void RestartSession()
