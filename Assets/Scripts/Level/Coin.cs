@@ -19,23 +19,24 @@ public class Coin : MonoBehaviour
     ParticleSystem myParticleSystem;
     [SerializeField]
     Light myLight;
-    [SerializeField]
-    Color myParticleColor;
 
     [SerializeField]
     AudioClip myAudioClip;
 
+    [SerializeField]
+    Renderer myRenderer;
+
     void Start()
     {
-        var col = myParticleSystem.colorOverLifetime;
-        col.enabled = true;
+        Color myColor = myRenderer.material.color;
 
+        var colLife = myParticleSystem.colorOverLifetime;
+        colLife.enabled = true;
         Gradient grad = new();
-        grad.SetKeys(new GradientColorKey[] { new GradientColorKey(myParticleColor, 0.0f), new GradientColorKey(myParticleColor, 1.0f) }, new GradientAlphaKey[] { new GradientAlphaKey(1.0f, 0.0f), new GradientAlphaKey(0.0f, 1.0f) });
+        grad.SetKeys(new GradientColorKey[] { new GradientColorKey(myColor, 0.0f), new GradientColorKey(myColor, 1.0f) }, new GradientAlphaKey[] { new GradientAlphaKey(1.0f, 0.0f), new GradientAlphaKey(0.0f, 1.0f) });
+        colLife.color = grad;
 
-        col.color = grad;
-
-        myLight.color = myParticleColor;
+        myLight.color = myColor;
     }
 
     public void CoinCollected()

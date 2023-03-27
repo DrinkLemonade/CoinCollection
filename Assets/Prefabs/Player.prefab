@@ -167,7 +167,7 @@ MonoBehaviour:
   debugging: 0
   playerInputSpace: {fileID: 1801488280162272114, guid: 9c4af23f767b8684abbfbf0a39e17f31, type: 3}
   maxSpeed: 8
-  maxAcceleration: 24
+  maxAcceleration: 30
   maxAirAcceleration: 6
   jumpHeight: 6
   maxGroundAngle: 46

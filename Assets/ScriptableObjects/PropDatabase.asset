@@ -38,5 +38,5 @@ MonoBehaviour:
     entryPrefab: {fileID: 1163873478676698679, guid: 4ba135632230a53438874e86492f01db, type: 3}
     verticalAdjust: 0.7
   - entryColor: {r: 0.4, g: 0.4, b: 0, a: 0}
-    entryPrefab: {fileID: 6066692892672593913, guid: f74733ec5392e5e4ca9d4c13b43efdd4, type: 3}
+    entryPrefab: {fileID: 8612826169703098704, guid: 54dbfa61ed674f34e82f6fdcd0fdc81c, type: 3}
     verticalAdjust: 0.7

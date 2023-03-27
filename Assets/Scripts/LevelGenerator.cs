@@ -65,6 +65,9 @@ public class LevelGenerator : MonoBehaviour
     [SerializeField]
     GameObject ceiling;
 
+    [SerializeField]
+    bool debugMode = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -114,7 +117,7 @@ public class LevelGenerator : MonoBehaviour
             {
                 float height = ExtractHeight(colorArray[i, j]);  //Use blue component. Black (wall, 25) to whiteish (1, lowest floor)
                 if (height > 0) CreateCube(i, j, height);
-                else CreateSpecialObject(i, j, height, lavaPrefab);
+                else if (debugMode) CreateSpecialObject(i, j, height, lavaPrefab); //Debug
 
             }
         }
@@ -122,7 +125,7 @@ public class LevelGenerator : MonoBehaviour
         levelMesh.SetTriangles(_tris, 0);
         levelMesh.SetUVs(0, _uvs);
         levelMesh.RecalculateNormals();
-        Debug.Log(_tris.Count);
+        if (debugMode) Debug.Log(_tris.Count);
 
         levelMeshCollider.sharedMesh = levelMesh;
     }

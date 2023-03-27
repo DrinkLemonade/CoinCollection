@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8612826169703098704
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4852220977580166327}
+  - component: {fileID: 4809468820368189716}
+  m_Layer: 0
+  m_Name: CoinPinata
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4852220977580166327
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8612826169703098704}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4809468820368189716
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8612826169703098704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df6ee8f8644991b4ebc96a977a5a91e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pinataPoints: 10
+  goldCoinPrefab: {fileID: 5146777619902727873, guid: 618284e6e783df446a2052a24014c757, type: 3}
+  silverCoinPrefab: {fileID: 5146777619902727873, guid: 0395b6f0753bc344ca6a019b859c74c0, type: 3}
+  copperCoinPrefab: {fileID: 5146777619902727873, guid: 919e5f5793ac77a4799dcdbddfb8d50b, type: 3}
+  rotationSpeed: 0
+  orbitSpeed: 100
+  maxOrbitDistance: 2
