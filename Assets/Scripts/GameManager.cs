@@ -1,9 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.ShaderGraph;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.Rendering.VirtualTexturing;
 using UnityEngine.SceneManagement;
+using UnityEngine.Windows;
 
 public class GameManager : MonoBehaviour
 {
@@ -23,6 +26,12 @@ public class GameManager : MonoBehaviour
     [NonSerialized] //I knew that had to exist
     public bool gameIsPaused = false;
     bool gameIsOver = false;
+
+    [SerializeField]
+    PlayerInput input;
+    [SerializeField]
+    GameObject player;
+    PlayerController getControls;
 
     [SerializeField]
     bool debugMode = false;
@@ -49,6 +58,14 @@ public class GameManager : MonoBehaviour
                 i.currentSession.currentSecondsLeft = 0;
                 if (!debugMode) TriggerGameOver();
             }
+        }
+
+        PlayerController getControls = player.GetComponent<PlayerController>();
+        bool pausing = (!gameIsPaused && getControls.controls.Player.Menu.WasReleasedThisFrame());
+        bool unpausing = (gameIsPaused && getControls.controls.UI.Unpause.WasReleasedThisFrame());
+        if (pausing || unpausing) //Pause Menu
+        {
+            TogglePause();
         }
     }
 
@@ -86,18 +103,22 @@ public class GameManager : MonoBehaviour
 
     public void TogglePause()
     {
+        PlayerController getControls = player.GetComponent<PlayerController>();
+
         gameIsPaused = !gameIsPaused; //Toggle
         if (gameIsOver) gameIsPaused = false; //Don't allow displaying the pause menu during game over
         if (gameIsPaused)
         {
+            getControls.controls.Player.Disable();
+            //input.SwitchCurrentActionMap("UI");
             Time.timeScale = 0;
-            //Make menus appear and stuff
             pausePanel.SetActive(true);
         }
         else
         {
+            getControls.controls.Player.Enable();
+            //input.SwitchCurrentActionMap("Player");
             Time.timeScale = 1;
-            //Make menus disappear
             pausePanel.SetActive(false);
         }
     }

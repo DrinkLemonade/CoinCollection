@@ -133,7 +133,7 @@ public class PlayerController : MonoBehaviour
         if (desiredJump && debugging) Debug.Log("Jump desired!");
         if (desiredJumpRelease && debugging) Debug.Log("Jump release desired!");
 
-        if (controls.Player.Menu.WasReleasedThisFrame()) //Pause Menu
+        if (controls.UI.Unpause.WasReleasedThisFrame() && GameManager.i.gameIsPaused) //Pause Menu
         {
             GameManager.i.TogglePause();
         } 
@@ -149,6 +149,11 @@ public class PlayerController : MonoBehaviour
         UpdateState();
         AdjustVelocity();
 
+        if (GameManager.i.gameIsPaused)
+        {
+            desiredJump = false;
+            desiredJumpRelease = false;
+        }
         //Handle jump
         if (desiredJump)
         {
