@@ -124,6 +124,12 @@ public class PlayerController : MonoBehaviour
         //We remember it using the OR operand, equivalent to x = x || y. Now it remains true once enabled, until explicitly made false.
         desiredJump |= controls.Player.Jump.triggered;
         desiredJumpRelease |= controls.Player.Jump.WasReleasedThisFrame();
+
+        if (GameManager.i.gameIsPaused)
+        {
+            desiredJump = false;
+            desiredJumpRelease = false;
+        }
         if (desiredJump && debugging) Debug.Log("Jump desired!");
         if (desiredJumpRelease && debugging) Debug.Log("Jump release desired!");
 

@@ -15,10 +15,16 @@ public class LevelGenerator : MonoBehaviour
 
     public Texture2D mapTexture;
 
+    private Color[,] colorArray;
+
+    List<Vector3> _vertices = new List<Vector3>();
+    List<int> _tris = new List<int>();
+    List<Vector2> _uvs = new List<Vector2>();
+
+
     [NonSerialized]
     public GameObject myCube; //instance created each loop
     //public GameObject CubePrefab; //prefab
-    private Color[,] colorArray;
     private ProBuilderMesh[,] meshArray;
 
     ProBuilderMesh m_Mesh;
@@ -31,10 +37,6 @@ public class LevelGenerator : MonoBehaviour
     float lavaHeight = 4f;
     [SerializeField]
     GameObject lavaPrefab;
-
-    List<Vector3> _vertices = new List<Vector3>();
-    List<int> _tris = new List<int>();
-    List<Vector2> _uvs = new List<Vector2>();
 
     [System.NonSerialized]
     public Mesh levelMesh;

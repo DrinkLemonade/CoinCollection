@@ -8,9 +8,6 @@ public class PropsBuilder : MonoBehaviour
     PropDatabase db;
     [SerializeField]
     Texture2D propTexture;
-
-    //float upPrefabFromFloor = 2.2f;
-
     public void CreateAllProps()
     {
         db.InitDatabase();
