@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 //using UnityEditor.ShaderGraph;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -34,6 +35,12 @@ public class GameManager : MonoBehaviour
     PlayerController getControls;
 
     [SerializeField]
+    TextMeshProUGUI gameOverText;
+
+    [SerializeField]
+    AudioClip gameOverAudio, victoryAudio;
+
+    [SerializeField]
     bool debugMode = false;
 
     // Start is called before the first frame update
@@ -47,18 +54,23 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!gameIsOver)
+        if (gameIsOver) return;
+        
+        if (i.currentSession.currentSecondsLeft > 0)
         {
-            if (i.currentSession.currentSecondsLeft > 0)
-            {
-                i.currentSession.currentSecondsLeft -= Time.deltaTime;
-            }
-            else
-            {
-                i.currentSession.currentSecondsLeft = 0;
-                if (!debugMode) TriggerGameOver();
-            }
+            i.currentSession.currentSecondsLeft -= Time.deltaTime;
         }
+        else
+        {
+            i.currentSession.currentSecondsLeft = 0;
+            if (!debugMode) TriggerGameOver();
+        }
+
+        if (i.currentSession.playerScore >= sessionCoinsForVictory)
+        {
+            TriggerVictory();
+        }
+        
 
         PlayerController getControls = player.GetComponent<PlayerController>();
         bool pausing = (!gameIsPaused && getControls.controls.Player.Menu.WasReleasedThisFrame());
@@ -88,17 +100,31 @@ public class GameManager : MonoBehaviour
         gameOverPanel.SetActive(false);
     }
 
-    public void TriggerGameOver()
+    public void TriggerGameEnd()
     {
-        Debug.Log("-----GAME OVER-----");
         gameIsOver = true;
         gameOverPanel.SetActive(true);
         Time.timeScale = 0;
     }
 
+    public void TriggerGameOver()
+    {
+        TriggerGameEnd();
+        SoundPlayer.i.source.PlayOneShot(gameOverAudio);
+        Debug.Log("-----GAME OVER-----");
+    }
+
+    public void TriggerVictory()
+    {
+        TriggerGameEnd();
+        SoundPlayer.i.source.PlayOneShot(victoryAudio);
+        gameOverText.text = "Victoire !";
+    }
+
     public void QuitToMenu()
     {
-        //Do nothing for now
+        Debug.LogWarning("QUITTING...");
+        Application.Quit();
     }
 
     public void TogglePause()

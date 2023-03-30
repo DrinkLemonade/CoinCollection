@@ -74,6 +74,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField, Min(0f)]
     float probeDistance = 2.5f; //How far down we check for ground to snap down to, instead of flying off. Our little knight's center is 2 units off the floor, so check 0.5 units below its feet. "If too low, snapping can fail at steep angles or high velocities, while too high can lead to nonsensical snapping to ground far below."
 
+    [SerializeField]
+    AudioClip jumpAudio, landAudio;
+
     void Awake()
     {
         controls = new GameControls();
@@ -199,6 +202,7 @@ public class PlayerController : MonoBehaviour
 
         stepsSinceLastJump = 0;
         unityAnimator.SetTrigger("Jump");
+        SoundPlayer.i.source.PlayOneShot(jumpAudio);
     }
     void JumpRelease()
     {
@@ -460,6 +464,7 @@ public class PlayerController : MonoBehaviour
         unityAnimator.SetTrigger("Land");
 
         Debug.Log("Just landed!");
+        SoundPlayer.i.source.PlayOneShot(landAudio);
     }
 
     void FaceVelocityDirection()

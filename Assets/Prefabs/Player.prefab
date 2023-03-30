@@ -168,13 +168,15 @@ MonoBehaviour:
   playerInputSpace: {fileID: 1801488280162272114, guid: 9c4af23f767b8684abbfbf0a39e17f31, type: 3}
   maxSpeed: 8
   maxAcceleration: 30
-  maxAirAcceleration: 6
+  maxAirAcceleration: 9
   jumpHeight: 6
   maxGroundAngle: 46
   maxStairsAngle: 50
   alwaysJumpStraightUp: 1
   maxSnapSpeed: 100
   probeDistance: 2.5
+  jumpAudio: {fileID: 8300000, guid: 569b1868338fe5549925a356c7f5a2c6, type: 3}
+  landAudio: {fileID: 8300000, guid: bb0349de07dadb049b41d84e7bad0f7c, type: 3}
 --- !u!136 &8110998022228975863
 CapsuleCollider:
   m_ObjectHideFlags: 0
