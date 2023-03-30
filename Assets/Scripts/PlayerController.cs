@@ -28,7 +28,7 @@ public class PlayerController : MonoBehaviour
     //Debug
     [SerializeField]
     bool debugging = false;
- 
+    
     //Controls and input
     public GameControls controls;
     [SerializeField]
@@ -80,7 +80,7 @@ public class PlayerController : MonoBehaviour
         body = GetComponent<Rigidbody>();
         OnValidate();
         UpdateAnimation();
-           // Play("Idle_SwordShield");
+        // Play("Idle_SwordShield");
         //animator.PlayIdle(animationConfig.IdleAnimationSpeed);
     }
 
@@ -136,11 +136,11 @@ public class PlayerController : MonoBehaviour
         if (controls.UI.Unpause.WasReleasedThisFrame() && GameManager.i.gameIsPaused) //Pause Menu
         {
             GameManager.i.TogglePause();
-        } 
+        }
     }
     void FixedUpdate()
     {
-        //"The FixedUpdate method gets invoked at the start of each physics simulation step. How often that happens depends on the time step, which is 0.02—fifty times per second—by default, but you can change it via the Time project settings or via Time.fixedDeltaTime."
+        //"The FixedUpdate method gets invoked at the start of each physics simulation step. How often that happens depends on the time step, which is 0.02 -fifty times per second- by default, but you can change it via the Time project settings or via Time.fixedDeltaTime."
         //"Can we use Time.deltaTime in FixedUpdate? Yes. When FixedUpdate gets invoked Time.deltaTime is equal to Time.fixedDeltaTime."
         //"Depending on your frame rate FixedUpdate can get invoked zero, one, or multiple times per invocation of Update. Each frame a sequence of FixedUpdate invocations happen, then Update gets invoked, then the frame gets rendered. This can make the discrete nature of the physics simulation obvious when the physics time step is too large relative to the frame time."
         //"You can solve that by either decreasing the fixed time step or by enabling the Interpolate mode of a Rigidbody. Setting it to Interpolate makes it linearly interpolate between its last and current position, so it will lag a bit behind its actual position according to PhysX. The other option is Extrapolate, which interpolates to its guessed position according to its velocity, which is only really acceptable for objects that have a mostly constant velocity.
@@ -430,7 +430,7 @@ public class PlayerController : MonoBehaviour
         //unityAnimator.ResetTrigger("Fall");
         //unityAnimator.ResetTrigger("Land");
 
-        //Si déplacement vecteur Z négatif etc passer un booléen?
+        //Si deplacement vecteur Z negatif etc passer un booleen?
         //Debug.Log("udpating animation! speed is: " + relativeVelocity.magnitude);
         Vector2 getAnimSpeed; //Don't take vertical (Y) velocity into account
         getAnimSpeed.x = relativeVelocity.x; //Use velocity related to connected body, not absolute, otherwise a platform moving down would trigger the falling animation
