@@ -39,6 +39,8 @@ public class GameManager : MonoBehaviour
 
     [SerializeField]
     AudioClip gameOverAudio, victoryAudio;
+    [SerializeField]
+    GameObject levelMusic;
 
     [SerializeField]
     bool debugMode = false;
@@ -105,6 +107,7 @@ public class GameManager : MonoBehaviour
         gameIsOver = true;
         gameOverPanel.SetActive(true);
         Time.timeScale = 0;
+        levelMusic.SetActive(false);
     }
 
     public void TriggerGameOver()

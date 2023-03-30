@@ -46032,7 +46032,8 @@ MonoBehaviour:
   gameOverText: {fileID: 8900232}
   gameOverAudio: {fileID: 8300000, guid: 97436a21053868a4c814fd7ff469377a, type: 3}
   victoryAudio: {fileID: 8300000, guid: c4483e3596eba944bbd7b6fedfe4a83c, type: 3}
-  debugMode: 1
+  levelMusic: {fileID: 1929103086}
+  debugMode: 0
 --- !u!4 &1382727617
 Transform:
   m_ObjectHideFlags: 0
